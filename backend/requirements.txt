@@ -1,0 +1,8 @@
+Flask
+Flask-SQLAlchemy
+Flask-CORS
+Flask-Restless
+SQLAlchemy
+gunicorn
+pytest
+pytest-flask
