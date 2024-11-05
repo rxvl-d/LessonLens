@@ -20,7 +20,9 @@ def init_webapp(test=False):
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "abc123")
-    CORS(app, supports_credentials=True)
+    CORS(app, 
+         supports_credentials=True,
+         resources={r"/api/*": {"origins": "*"}})
     db.app = app
     db.init_app(app)
     return app
