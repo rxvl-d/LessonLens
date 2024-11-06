@@ -6,3 +6,5 @@ SQLAlchemy
 gunicorn
 pytest
 pytest-flask
+scikit-learn
+anthropic
