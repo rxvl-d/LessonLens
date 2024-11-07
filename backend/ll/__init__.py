@@ -5,7 +5,8 @@ from ll.api import api
 from ll.model import db
 import os
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
 
 app = Flask(__name__)

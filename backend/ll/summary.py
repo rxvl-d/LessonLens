@@ -7,6 +7,14 @@ import os
 from anthropic import Anthropic
 from pathlib import Path
 import pickle
+import nltk
+from nltk.corpus import stopwords
+
+# Download German stop words from NLTK
+nltk.download('stopwords')
+german_stop_words = stopwords.words('german')
+custom_stop_words = ['dass', 'dabei']
+german_stop_words.extend(custom_stop_words)
 
 class ResultClassifiers:
     _instance = None
@@ -36,15 +44,24 @@ class ResultClassifiers:
             self.curriculum = f.read()
         
         # Initialize topic modeling
-        self.vectorizer = TfidfVectorizer(max_features=1000, stop_words='english')
+        self.vectorizer = TfidfVectorizer(
+            stop_words=german_stop_words,
+            # Common German characters included in token pattern
+            token_pattern=r'(?u)\b[\w\äöüßÄÖÜ]+\b',
+            # Include German-specific preprocessing
+            lowercase=True,
+            strip_accents='unicode'
+        )
         self.lda = LatentDirichletAllocation(n_components=5, random_state=42)
         
         # Define valid resource types
         self.valid_resource_types = [
             'course', 'tutorial', 'lecture_notes', 'textbook',
-            'practice_problems', 'quiz', 'video', 'simulation',
-            'interactive_tool', 'reference_material', 'lab_exercise',
-            'assessment', 'worksheet', 'study_guide'
+            'practice_problems', 'quiz', 'video', 'podcast', 'software', 
+            'image', 'simulation', 'lesson plan', 'presentation', 
+            'professional development', 'interactive_tool', 
+            'reference_material', 'lab_exercise', 'assessment', 
+            'worksheet', 'study_guide'
         ]
         
         self._initialized = True
@@ -64,7 +81,7 @@ class ResultClassifiers:
         try:
             response = self.client.messages.create(
                 model=self.CLAUDE_MODEL,
-                max_tokens=2048,
+                max_tokens=1024,
                 messages=[{'role': 'user', 'content': [{'type': 'text', 'text': prompt}]}]
             )
             return response.content[0].text
@@ -91,7 +108,7 @@ class ResultClassifiers:
             topic_words = {}
             for topic_idx, topic in enumerate(self.lda.components_):
                 top_words = [feature_names[i] for i in topic.argsort()[:-10:-1]]
-                topic_words[f'topic_{topic_idx}'] = ' '.join(top_words)
+                topic_words[f'topic_{topic_idx}'] = tuple(top_words)
             
             # Calculate percentage of documents in each topic
             topic_percentages = (doc_topics > 0.3).sum(axis=0) / len(documents) * 100
@@ -112,7 +129,8 @@ class ResultClassifiers:
 Use the curriculum to answer.
 Answer with a grade level (number between 5 and 10 (inclusive)) OR comma separated list of grade levels OR with the keyword UNSURE.
 Curriculum: {self.curriculum}
-Snippet: Title: {title}
+Snippet: 
+Title: {title}
 Description: {description}
 URL: {url}"""
             
@@ -198,7 +216,7 @@ def classify_serp_results(serp_data: Dict) -> Dict:
         types_percent = {k: (v / total_results) * 100 for k, v in resource_types_count.items()}
         
         return {
-            'topics': topics_percent,
+            'topics': {','.join(k[:3]): v for (k, v) in topics_percent.items()},
             'educational_levels': levels_percent,
             'resource_types': types_percent
         }
