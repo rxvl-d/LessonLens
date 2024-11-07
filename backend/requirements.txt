@@ -8,3 +8,4 @@ pytest
 pytest-flask
 scikit-learn
 anthropic
+nltk
