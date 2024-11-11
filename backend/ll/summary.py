@@ -4,11 +4,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 import json
 import os
-from anthropic import Anthropic
 from pathlib import Path
 import pickle
 import nltk
 from nltk.corpus import stopwords
+from guidance import guidance, models, select, gen
 
 # Download German stop words from NLTK
 nltk.download('stopwords')
@@ -16,7 +16,11 @@ german_stop_words = stopwords.words('german')
 custom_stop_words = ['dass', 'dabei']
 german_stop_words.extend(custom_stop_words)
 
-class ResultClassifiers:
+# Initialize the model once at file level
+MODEL_PATH = Path.home() / ".cache/huggingface/hub/models--lmstudio-community--Meta-Llama-3-8B-Instruct-GGUF/snapshots/0910a3e69201d274d4fd68e89448114cd78e4c82/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf"
+llm = models.LlamaCpp(str(MODEL_PATH), n_gpu_layers=-1, n_ctx=1024)
+
+class GuidanceClassifiers:
     _instance = None
     
     def __new__(cls):
@@ -29,8 +33,8 @@ class ResultClassifiers:
         if self._initialized:
             return
             
-        self.client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-        self.CLAUDE_MODEL = "claude-3-5-sonnet-20240620"
+        # Use the global model instance
+        self.lm = llm
         self.cache_dir = Path(".cache")
         self.cache_dir.mkdir(exist_ok=True)
         
@@ -46,9 +50,7 @@ class ResultClassifiers:
         # Initialize topic modeling
         self.vectorizer = TfidfVectorizer(
             stop_words=german_stop_words,
-            # Common German characters included in token pattern
             token_pattern=r'(?u)\b[\w\äöüßÄÖÜ]+\b',
-            # Include German-specific preprocessing
             lowercase=True,
             strip_accents='unicode'
         )
@@ -76,18 +78,6 @@ class ResultClassifiers:
     def _save_cache(self, cache: Dict, filename: str):
         with open(self.cache_dir / filename, 'wb') as f:
             pickle.dump(cache, f)
-
-    def _ask_claude(self, prompt: str) -> str:
-        try:
-            response = self.client.messages.create(
-                model=self.CLAUDE_MODEL,
-                max_tokens=1024,
-                messages=[{'role': 'user', 'content': [{'type': 'text', 'text': prompt}]}]
-            )
-            return response.content[0].text
-        except Exception as e:
-            print(f"Error calling Claude API: {e}")
-            return "unknown"
 
     def topic_classifier(self, titles: List[str], descriptions: List[str]) -> Dict[str, float]:
         """Performs topic modeling on the documents and returns topic distributions."""
@@ -119,64 +109,65 @@ class ResultClassifiers:
             print(f"Error in topic classification: {e}")
             return {"unknown": 100.0}
 
-    def education_level_classifier(self, title: str, description: str, url: str) -> List[str]:
-        """Classifies education level using Claude, with caching."""
-        try:
-            if url in self.edu_level_cache:
-                return self.edu_level_cache[url]
-            
-            prompt = f"""Given the search result snippet of an educational resource on the web, tell me which grade it is appropriate for?
-Use the curriculum to answer.
-Answer with a grade level (number between 5 and 10 (inclusive)) OR comma separated list of grade levels OR with the keyword UNSURE.
-Curriculum: {self.curriculum}
-Snippet: 
-Title: {title}
-Description: {description}
-URL: {url}"""
-            
-            response = self._ask_claude(prompt)
-            
-            # Parse response into list of grade levels
-            if response.strip().upper() == 'UNSURE':
-                grades = ['unknown']
-            else:
-                grades = [g.strip() for g in response.split(',')]
-                
-            self.edu_level_cache[url] = grades
-            self._save_cache(self.edu_level_cache, 'education_levels.pkl')
-            
-            return grades
-        except Exception as e:
-            print(f"Error in education level classification: {e}")
-            return ['unknown']
+    @guidance
+    def education_level_classify(lm, title: str, description: str, curriculum: str):
+        """Guidance program for education level classification."""
+        lm += f"""Given this educational resource, determine which grade levels (5-10) it is appropriate for.
+    Analyze based on this curriculum:
+    {curriculum}
 
-    def resource_type_classifier(self, title: str, description: str, url: str) -> List[str]:
-        """Classifies resource type using Claude, with caching."""
-        try:
-            if url in self.resource_type_cache:
-                return self.resource_type_cache[url]
-            
-            prompt = f"""Given this educational resource, what type of resource is it?
-Choose from these categories: {', '.join(self.valid_resource_types)}
-You can select up to 2 categories. Answer with just the category names separated by comma.
+    Resource:
+    Title: {title}
+    Description: {description}
 
-Title: {title}
-Description: {description}
-URL: {url}"""
-            
-            response = self._ask_claude(prompt)
-            resource_types = [rt.strip() for rt in response.split(',')]
-            
-            self.resource_type_cache[url] = resource_types
-            self._save_cache(self.resource_type_cache, 'resource_types.pkl')
-            
-            return resource_types
-        except Exception as e:
-            print(f"Error in resource type classification: {e}")
-            return ['unknown']
+    Respond with ONLY the grade numbers separated by commas or UNSURE if you cannot determine.
+    Answer: """
+        
+        # Use select for basic UNSURE vs grade selection
+        response_type = select(['UNSURE', 'GRADES'], name='response_type')
+        lm += response_type
+        
+        if lm['response_type'] == 'GRADES':
+            # Use regex to enforce valid grade format (numbers 5-10 separated by commas)
+            lm += ' ' + gen(regex='([5-9]|10)(,\s*([5-9]|10))*', name='grade_nums')
+            grades = [g.strip() for g in lm['grade_nums'].split(',')]
+        else:
+            grades = ['unknown']
+        
+        lm += f"\ngrades = {grades}"
+        return lm
 
-# Create a global instance
-classifiers = ResultClassifiers()
+    @guidance
+    def resource_type_classify(lm, title: str, description: str, valid_resource_types: List[str]):
+        """Guidance program for resource type classification."""
+        lm += f"""Classify this educational resource into up to 2 categories.
+
+    Resource:
+    Title: {title}
+    Description: {description}
+
+    Select the most appropriate categories from this list:
+    {', '.join(valid_resource_types)}
+
+    Answer with ONLY the category names, separated by comma if more than one.
+    Categories: """
+        
+        # First select how many categories (1 or 2)
+        num_categories = select(['1', '2'], name='num_cats')
+        lm += num_categories
+        
+        # Then select the categories themselves
+        if lm['num_cats'] == '1':
+            lm += ' ' + select(valid_resource_types, name='cat1')
+            resource_types = [lm['cat1']]
+        else:
+            lm += ' ' + select(valid_resource_types, name='cat1') + ', ' + select(valid_resource_types, name='cat2')
+            resource_types = [lm['cat1'], lm['cat2']]
+        
+        lm += f"\nresource_types = {resource_types}"
+        return lm
+
+classifiers = GuidanceClassifiers()
 
 def classify_serp_results(serp_data: Dict) -> Dict:
     """Process SERP results and return classification statistics."""
@@ -200,9 +191,24 @@ def classify_serp_results(serp_data: Dict) -> Dict:
             description = result['description']
             url = result['url']
             
-            # Get classifications
-            levels = classifiers.education_level_classifier(title, description, url)
-            types = classifiers.resource_type_classifier(title, description, url)
+            # Use cache if available
+            if url in classifiers.edu_level_cache:
+                levels = classifiers.edu_level_cache[url]
+            else:
+                # Execute the guidance program
+                lm_edu = classifiers.education_level_classify(classifiers.lm, title, description, classifiers.curriculum)
+                levels = lm_edu['grades'] if 'grades' in lm_edu else ['unknown']
+                classifiers.edu_level_cache[url] = levels
+                classifiers._save_cache(classifiers.edu_level_cache, 'education_levels.pkl')
+
+            if url in classifiers.resource_type_cache:
+                types = classifiers.resource_type_cache[url]
+            else:
+                # Execute the guidance program
+                lm_type = classifiers.resource_type_classify(classifiers.lm, title, description, classifiers.valid_resource_types)
+                types = lm_type['resource_types'] if 'resource_types' in lm_type else ['unknown']
+                classifiers.resource_type_cache[url] = types
+                classifiers._save_cache(classifiers.resource_type_cache, 'resource_types.pkl')
             
             # Update counters
             for level in levels:

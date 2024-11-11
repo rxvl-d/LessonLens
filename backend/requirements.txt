@@ -9,3 +9,4 @@ pytest-flask
 scikit-learn
 anthropic
 nltk
+guidance

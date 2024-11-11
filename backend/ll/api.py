@@ -13,4 +13,5 @@ def summary():
         response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
         return response
     elif request.method == 'POST':
+        print(request.json)
         return classify_serp_results(request.json)
