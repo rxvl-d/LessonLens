@@ -1,5 +1,6 @@
 .DS_Store
 .cache
 .envrc
+.pytest_cache
 **/__pycache__/*
 *export.txt
