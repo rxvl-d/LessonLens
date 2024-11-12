@@ -63,3 +63,28 @@ def metadata():
         response = jsonify(metadata_list)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
+
+        
+@api.route('/enhanced-snippets', methods=['POST', 'OPTIONS'])
+def enhanced_snippets():
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Accept')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+        return response
+    elif request.method == 'POST':
+        urls = request.json.get('urls', [])
+        
+        # Generate simple enhanced snippets for each URL
+        snippets_list = []
+        for url in urls:
+            snippet_data = {
+                'url': url,
+                'enhancedSnippet': "This is an enhanced search result snippet that provides a better description of the page content. It should be more informative than the original snippet."
+            }
+            snippets_list.append(snippet_data)
+
+        response = jsonify(snippets_list)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
