@@ -39,7 +39,7 @@ class ResultClassifiers:
         self.resource_type_cache = self._load_cache('resource_types.pkl')
         
         # Load curriculum
-        curr_path = Path(__file__).parent / 'phy.txt'
+        curr_path = Path(__file__).parent.parent / 'data'/ 'curricula' / 'chem.txt'
         with open(curr_path) as f:
             self.curriculum = f.read()
         

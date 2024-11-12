@@ -1,0 +1,57 @@
+Grades 5/6:
+- Basic Matter Concepts:
+  - States of matter (solid, liquid, gas)
+  - Properties of materials/substances
+  - Particle/building block model
+  - Diffusion
+  - Separation methods
+- Introduction to Solutions:
+  - Acids and bases (basic introduction)
+  - Solubility
+  - Simple separation techniques including chromatography
+
+Grades 7/8:
+- Chemical Reactions:
+  - Basic chemical reactions - identifying products and reactants
+  - Law of conservation of mass
+  - Introduction to energy in chemical reactions (exothermic/endothermic)
+  - Word equations for reactions
+  - Simple atomic model
+  - Introduction to oxidation reactions
+  - Carbon cycle
+  - Catalysts and activation energy
+- Energy Changes:
+  - Energy transfer during reactions
+  - Energy diagrams
+  - Heat exchange between system and surroundings
+- Matter Structure:
+  - Simple atomic model
+  - Distinguishing between conductors and insulators
+  - Introduction to electrons and atomic structure
+
+Grades 9/10:
+- Atomic Structure & Periodic Table:
+  - Detailed atomic model (protons, neutrons, electrons)
+  - Energy level model of electron shell
+  - Structure and organization of the periodic table
+  - Isotopes
+  - Ion formation
+- Chemical Bonding:
+  - Ionic bonding
+  - Covalent bonding (polar and non-polar)
+  - Three-dimensional molecular structure
+  - Hydrogen bonding
+- Acids and Bases:
+  - Proton transfer concept
+  - pH scale
+  - Acid-base reactions
+  - Neutralization
+- Redox Reactions:
+  - Electron transfer concept
+  - Oxidation and reduction
+  - Applications in everyday life and technology
+- Chemical Analysis:
+  - Qualitative testing
+  - Concentration concepts
+  - Systematic analysis methods
+
