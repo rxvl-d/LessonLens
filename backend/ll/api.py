@@ -35,7 +35,7 @@ def metadata():
             
             metadata = {
                 'url': url,
-                'metadata': {
+                'data': {
                     'educationalLevel': [
                         # Vary educational levels based on URL
                         *(['9', '10'] if url_hash in [0, 2] else []),
@@ -60,7 +60,7 @@ def metadata():
             }
             metadata_list.append(metadata)
 
-        response = jsonify(metadata_list)
+        response = jsonify({'results': metadata_list})
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 
@@ -81,10 +81,12 @@ def enhanced_snippets():
         for url in urls:
             snippet_data = {
                 'url': url,
-                'enhancedSnippet': "This is an enhanced search result snippet that provides a better description of the page content. It should be more informative than the original snippet."
+                'data': {
+                    'enhancedSnippet': "This is an enhanced search result snippet that provides a better description of the page content. It should be more informative than the original snippet."
+                }
             }
             snippets_list.append(snippet_data)
 
-        response = jsonify(snippets_list)
+        response = jsonify({'results': snippets_list})
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
