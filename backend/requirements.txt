@@ -9,3 +9,6 @@ pytest-flask
 scikit-learn
 anthropic
 nltk
+Pillow
+beautifulsoup4
+trafilatura
