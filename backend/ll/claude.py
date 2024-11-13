@@ -1,3 +1,4 @@
+import json
 import os
 from anthropic import Anthropic
 from pathlib import Path
@@ -51,3 +52,90 @@ class Claude:
                 return response
             else:
                 return None
+
+
+class Personas:
+    default = "You are a curator of educational resources who assigns educational metadata "+\
+            "based on the content of those resources."
+
+class EducationalLevel:
+    def __init__(self, subject='chem'):
+        self.claude = Claude()
+        self.persona = Personas.default 
+        self.task=  "Your task is to clasify which educational levels a given resource is" +\
+            " appropriate for given the content of the resource and the given curriculum."
+        self.response_instructions = "Respond with ONLY a JSON object "+ \
+            "where the keys are the URLs and the labels are the following: "+ \
+            "If the resource can be identified according to the curriculum "+ \
+            "as being appropriate for a particular grade or grades label the URL with a list of grades (integers)." + \
+            "If not, and you can tell from general knowledge that the resource is appropriate " +\
+            "for HIGHER_EDUCATION, PRIMARY_EDUCATION or is NOT_FOR_EDUCATIONAL_PURPOSES, "+\
+            "label the URL with that string. If you're usure, label it UNSURE."
+
+        self.curriculum = self._load_curriculum(subject)
+
+        
+    def _load_curriculum(self, subject):
+        Path(__file__).parent.parent / 'data'/ 'curricula' / f'{subject}.txt'
+    
+    def classify(self, url_to_text):
+        prompt = f"""{self.persona}
+        {self.task}
+        Resource content by URL: {url_to_text}
+        Curriculum:
+        {self.curriculum}
+        
+        {self.response_instructions}"""
+        response = self.claude.ask(prompt)
+        return json.loads(response)
+
+class ResourceType:
+    def __init__(self):
+        self.claude = Claude()
+        self.persona =  Personas.default
+        self.valid_resource_types = [
+            'course', 'tutorial', 'lecture_notes', 'textbook',
+            'practice_problems', 'quiz', 'video', 'podcast', 'software', 
+            'image', 'simulation', 'lesson plan', 'presentation', 
+            'professional development', 'interactive_tool', 
+            'reference_material', 'lab_exercise', 'assessment', 
+            'worksheet', 'study_guide'
+        ]
+        self.valid_resource_types_str = ', '.join(self.valid_resource_types)
+        self.task=  "Your task is to clasify the resource type of each resource."
+        self.response_instructions = "Respond with ONLY a JSON object "+ \
+            "where the keys are the URLs and the labels are the following: "+ \
+            f"If the resource can be identified as one of  {self.valid_resource_types},"+ \
+            "label the URL with a list of the resource types that apply." + \
+            "If not, label it UNSURE."
+
+    def classify(self, url_to_text):
+        prompt = f"""{self.persona}
+        {self.task}
+        Resource content by URL: {url_to_text}
+        {self.response_instructions}"""
+        response = self.claude.ask(prompt)
+        return json.loads(response)
+
+class Subject:
+    def __init__(self):
+        self.claude = Claude()
+        self.persona =  Personas.default
+        self.valid_subjects = [
+            'Physics', 'Chemistry', 'Mathematics'
+        ]
+        self.valid_subjects_str = ', '.join(self.valid_subjects)
+        self.task=  "Your task is to clasify the subject of each resource."
+        self.response_instructions = "Respond with ONLY a JSON object "+ \
+            "where the keys are the URLs and the labels are the following: "+ \
+            f"If the resource can be identified as one of  {self.valid_subjects_str},"+ \
+            "label the URL with a list of the subjects that apply." + \
+            "If not, label it UNSURE."
+
+    def classify(self, url_to_text):
+        prompt = f"""{self.persona}
+        {self.task}
+        Resource content by URL: {url_to_text}
+        {self.response_instructions}"""
+        response = self.claude.ask(prompt)
+        return json.loads(response)

@@ -1,8 +1,17 @@
 from flask import Blueprint, request, jsonify
 
 from ll.summary import classify_serp_results
+from ll.cache import WebPageCache
+from ll.claude import EducationalLevel, Subject, ResourceType
 
 api = Blueprint('api', __name__)
+pages = WebPageCache()
+educational_levels = EducationalLevel()
+subjects = Subject()
+resource_types = ResourceType()
+
+class Config:
+    TEXT_LIMIT = 1000
 
 def handle_options_request():
     response = jsonify({'status': 'ok'})
@@ -25,41 +34,21 @@ def metadata():
         return handle_options_request()
     elif request.method == 'POST':
         urls = request.json.get('urls', [])
-        
-        # Generate dummy metadata for each URL
-        metadata_list = []
-        for url in urls:
-            # Create varying dummy data based on the URL to simulate different results
-            url_hash = hash(url) % 4  # Use URL to deterministically vary the response
-            
-            metadata = {
-                'url': url,
-                'data': {
-                    'educationalLevel': [
-                        # Vary educational levels based on URL
-                        *(['9', '10'] if url_hash in [0, 2] else []),
-                        *(['11', '12'] if url_hash in [1, 3] else []),
-                        *(['Higher Education'] if url_hash == 2 else [])
-                    ],
-                    'resourceType': [
-                        # Vary resource types based on URL
-                        *(['Lesson Plan'] if url_hash in [0, 3] else []),
-                        *(['Course'] if url_hash in [1, 2] else []),
-                        *(['Activity'] if url_hash == 0 else []),
-                        *(['Assessment'] if url_hash == 2 else [])
-                    ],
-                    'subject': [
-                        # Vary subjects based on URL
-                        *(['Mathematics'] if url_hash in [0, 2] else []),
-                        *(['Physics'] if url_hash in [1, 3] else []),
-                        *(['Computer Science'] if url_hash == 2 else []),
-                        *(['Chemistry'] if url_hash == 0 else [])
-                    ]
-                }
-            }
-            metadata_list.append(metadata)
-
-        response = jsonify({'results': metadata_list})
+        urls_to_text = {url: pages.cache(url)['text'][:Config.TEXT_LIMIT] for url in urls}
+        urls_to_educational_level = educational_levels.classify(urls_to_text)
+        urls_to_resource_type = resource_types.classify(urls_to_text)
+        urls_to_subject = subjects.classify(urls_to_text)
+        assert set(urls) == set(urls_to_educational_level.keys())
+        assert set(urls) == set(urls_to_resource_type.keys())
+        assert set(urls) == set(urls_to_subject.keys())
+        results = [
+            {'url': url, 
+             'data': {
+                 'educationalLevel': urls_to_educational_level[url],
+                 'resourceType': urls_to_resource_type[url],
+                 'subject': urls_to_subject[url]
+                 }} for url in urls]
+        response = jsonify({'results':results})
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 

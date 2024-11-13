@@ -6,6 +6,7 @@ import trafilatura
 import logging
 
 log = logging.getLogger(__name__)
+logging.getLogger("trafilatura").setLevel(logging.WARNING)
 
 def hash(url):
     return hashlib.md5(url.encode()).hexdigest()
@@ -52,7 +53,7 @@ class WebPageCache:
     def fetch_html(self, url):
         html_path = self._html_path(url)
         if not os.path.exists(html_path):
-            html =trafilatura.fetch_url(url)
+            html =trafilatura.fetch_url(url) or ""
             with open(html_path, 'w') as f:
                 f.write(html)
         with open(html_path, 'r') as f:
@@ -65,7 +66,7 @@ class WebPageCache:
             log.warning(f"HTML not found for {url}")
             return None
         elif not os.path.exists(text_path):
-            text=trafilatura.extract(self.fetch_html(url))
+            text=trafilatura.extract(self.fetch_html(url)) or ""
             with open(text_path, 'w') as f:
                 f.write(text)
         with open(text_path, 'r') as f:
