@@ -4,14 +4,17 @@ from ll.summary import classify_serp_results
 
 api = Blueprint('api', __name__)
 
+def handle_options_request():
+    response = jsonify({'status': 'ok'})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Accept')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return response
+
 @api.route('/summary', methods=['POST', 'OPTIONS'])
 def summary():
     if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Accept')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-        return response
+        return handle_options_request()
     elif request.method == 'POST':
         return classify_serp_results(request.json)
 
@@ -19,11 +22,7 @@ def summary():
 @api.route('/metadata', methods=['POST', 'OPTIONS'])
 def metadata():
     if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Accept')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-        return response
+        return handle_options_request()
     elif request.method == 'POST':
         urls = request.json.get('urls', [])
         
@@ -68,11 +67,7 @@ def metadata():
 @api.route('/enhanced-snippets', methods=['POST', 'OPTIONS'])
 def enhanced_snippets():
     if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Accept')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-        return response
+        return handle_options_request()
     elif request.method == 'POST':
         urls = request.json.get('urls', [])
         
