@@ -1,9 +1,13 @@
+import json
+from pathlib import Path
 from flask import Blueprint, request, jsonify
 
 from ll.summary import classify_serp_results
 from ll.cache import WebPageCache
 from ll.claude import EducationalLevel, Subject, ResourceType
+import logging
 
+log = logging.getLogger(__name__)
 api = Blueprint('api', __name__)
 pages = WebPageCache()
 educational_levels = EducationalLevel()
@@ -74,3 +78,28 @@ def enhanced_snippets():
         response = jsonify({'results': snippets_list})
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
+
+        
+@api.route('/study-settings', methods=['OPTIONS', 'POST'])
+def study_settings():
+    if request.method == 'OPTIONS':
+        return handle_options_request()
+        
+    profile_id = request.json.get('profile_id')
+    if not profile_id:
+        return jsonify({'error': 'Profile ID is required'}), 400
+        
+    settings_path = Path(__file__).parent.parent / 'data' / 'profiles' / f'{profile_id}.json'
+    
+    try:
+        with open(settings_path, 'r') as f:
+            settings = json.load(f)
+            
+        return jsonify(settings)
+        
+    except FileNotFoundError:
+        return jsonify({'error': 'Profile not found'}), 404
+    except json.JSONDecodeError as e:
+        return jsonify({'error': 'Invalid settings file'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
