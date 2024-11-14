@@ -1,0 +1,71 @@
+Grades 5/6:
+1. Numbers and Operations
+- Natural numbers and operations
+- Fractions (introduction and operations)
+- Decimal numbers and operations
+- Basic concepts of estimation and rounding
+
+2. Geometry & Measurement:
+- Basic geometric shapes and bodies
+- Parallel and perpendicular lines  
+- Angles (measuring, drawing)
+- Area and perimeter of rectangles
+- Surface area and volume of cubes/cuboids
+- Symmetry and transformations
+
+3. Statistics:
+- Planning and conducting statistical surveys
+- Data collection and representation
+- Basic statistical measures (mean, mode, range)
+
+Grades 7/8:
+1. Numbers and Operations:
+- Negative numbers (introduction and operations)
+- Proportional and inverse proportional relationships
+- Percentages
+- Basic algebra (terms and variables)
+
+2. Algebra:
+- Linear equations and systems
+- Basic term transformations
+- Functional relationships
+
+3. Geometry:
+- Triangle constructions 
+- Angle relationships
+- Properties of triangles and quadrilaterals
+- Circle properties
+- Area and volume of prisms
+- Pythagorean theorem
+
+4. Probability:
+- Basic probability concepts
+- Single and multi-stage random experiments
+- Tree diagrams
+
+Grades 9/10:
+1. Algebra and Functions:
+- Quadratic functions and equations
+- Power functions
+- Exponential functions 
+- Trigonometric functions (sine and cosine)
+- Function transformations and parameters
+
+2. Geometry:
+- Similarity
+- Trigonometric ratios
+- Circle calculations (circumference, area)
+- Surface area and volume of pyramids, cones, cylinders, spheres
+- 3D geometry
+
+3. Statistics & Probability:
+- Tree diagrams and two-way tables
+- Conditional probability
+- Data analysis and interpretation
+
+4. Number Theory:
+- Real numbers
+- Irrational numbers
+- Limits and approximation processes
+- Number system extensions
+
