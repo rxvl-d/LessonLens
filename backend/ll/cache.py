@@ -16,7 +16,7 @@ class WebPageCache:
 
     def __init__(self):
         self.cache_path = Path(os.getenv("HOME")) / '.cache' / 'LessonLens' / 'webpage_cache'
-        self.cache_path.mkdir(exist_ok=True)
+        self.cache_path.mkdir(exist_ok=True, parents=True)
     
     def _read_if_exists(self, path, read_as_image=False):
         if os.path.exists(path):    
