@@ -87,7 +87,9 @@ class EducationalLevel:
         
         {self.response_instructions}"""
         response = self.claude.ask(prompt)
-        return json.loads(response)
+        response = json.loads(response)
+        response = {k: None if v == "UNSURE" else v for k, v in response.items()}
+        return response
 
 class ResourceType:
     def __init__(self):
@@ -115,7 +117,9 @@ class ResourceType:
         Resource content by URL: {url_to_text}
         {self.response_instructions}"""
         response = self.claude.ask(prompt)
-        return json.loads(response)
+        response = json.loads(response)
+        response = {k: None if v == "UNSURE" else v for k, v in response.items()}
+        return response
 
 class Subject:
     def __init__(self):
@@ -138,4 +142,6 @@ class Subject:
         Resource content by URL: {url_to_text}
         {self.response_instructions}"""
         response = self.claude.ask(prompt)
-        return json.loads(response)
+        response = json.loads(response)
+        response = {k: None if v == "UNSURE" else v for k, v in response.items()}
+        return response
