@@ -63,6 +63,8 @@ def enhanced_snippets():
         return handle_options_request()
     elif request.method == 'POST':
         urls = request.json.get('urls', [])
+        task_desc = request.json.get('task_desc')
+        assert task_desc is not None
         
         # Generate simple enhanced snippets for each URL
         snippets_list = []
