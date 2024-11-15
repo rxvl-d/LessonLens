@@ -1,0 +1,16 @@
+{"subject": "math",
+"tasks":[
+  {
+    "feature_flags": [],
+    "search_task": "You are a 7th grade mathematics teacher at a Gymnasium in Niedersachsen. Your class has 24 students with basic understanding of angle measurement from primary school. You are preparing to introduce the topic of angle relationships in triangles.Find appropriate practice exercises for students to understand that the sum of angles in a triangle equals 180 degrees. You need exercises that allow students to verify this property through measurement."
+  },
+  {
+    "feature_flags": ["metadata"],
+    "search_task": "You are a 7th grade mathematics teacher at a Realschule in Niedersachsen. Your class of 22 students has just completed learning about angle relationships in triangles and basic triangle constructions. You are planning a lesson that connects these concepts with the Pythagorean theorem.Find teaching materials that help students understand the relationship between right triangles, their construction, and the Pythagorean theorem. You need resources that show both the geometric and algebraic representations of the theorem."
+  },
+  {
+    "feature_flags": [],
+    "search_task": "You are a 7th grade mathematics teacher at a Gesamtschule in Niedersachsen. Your class of 25 students is beginning to learn about quadrilaterals. They have a good understanding of parallel lines and basic angle relationships.Find examples and exercises that introduce the properties of rectangles and squares, focusing on their angle properties and parallel sides."
+  }
+]}
+
