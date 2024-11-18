@@ -68,8 +68,6 @@ class Summarizer:
                           for r in serp_data['results']]
             educational_levels = self.education_level_classifier.classify(input_data)
             resource_types = self.resource_type_classifier.classify(input_data)
-            print(educational_levels)
-            print(resource_types)
             # Initialize counters for other classifications
             educational_levels_count = {}
             resource_types_count = {}
@@ -77,8 +75,11 @@ class Summarizer:
             # Process each result
             for result in educational_levels:
                 response = result['response']
-                for level in response:
-                    educational_levels_count[level] = educational_levels_count.get(level, 0) + 1
+                if type(response) == list:
+                    for level in response:
+                        educational_levels_count[level] = educational_levels_count.get(level, 0) + 1
+                elif type(response) == str:
+                    educational_levels_count[response] = educational_levels_count.get(response, 0) + 1
 
             for result in resource_types:
                 response = result['response']
@@ -90,10 +91,11 @@ class Summarizer:
             levels_percent = {k: (v / total_results) * 100 for k, v in educational_levels_count.items()}
             types_percent = {k: (v / total_results) * 100 for k, v in resource_types_count.items()}
             
-            return {
+            response = {
                 'topics': {','.join(k[:3]): v for (k, v) in topics_percent.items()},
                 'educational_levels': levels_percent,
                 'resource_types': types_percent
             }
+            return response
         except Exception as e:
             raise e

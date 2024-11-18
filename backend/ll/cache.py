@@ -107,10 +107,11 @@ class PromptLevelCache:
     def get_or_fetch(self, prompt, fetch_fn):
         response = self.get(prompt)
         if response is None:
+            log.info(f"Cache miss for prompt: {prompt[:100]}...")
             response = fetch_fn(prompt)
             self.set(prompt, response)
         else:
-            log.info(f"Cache hit for prompt: {prompt}")
+            log.debug(f"Cache hit for prompt: {prompt}")
         return response
 
 class URLContentLevelCache:
@@ -155,8 +156,9 @@ class URLContentLevelCache:
             cached = self.get(url, content_type)
             if cached is not None:
                 from_cache.append(cached)
-                log.info(f"Cache hit for {url} {content_type}")
+                log.debug(f"Cache hit for {url} {content_type} {self.label}")
             else:
+                log.info(f"Cache miss for {url} {content_type} {self.label}")
                 to_fetch.append(url_data)
         if len(to_fetch) == 0:
             return from_cache
