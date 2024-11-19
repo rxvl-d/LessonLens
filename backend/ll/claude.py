@@ -1,3 +1,4 @@
+from functools import partial
 import json
 import os
 from anthropic import Anthropic
@@ -132,3 +133,31 @@ class Subject:
 
     def classify(self, url_content_batch):
         return self.url_level_cache.get_or_fetch_batch(url_content_batch, self.classify_fresh)
+
+class Snippets:
+    def __init__(self):
+        self.claude = Claude()
+        self.persona =  Personas.default
+        self.task=  "Your task is to pick one or two sentences or fragments "+\
+            "of sentences ONLY from the resource content and compose a search snippet "+\
+            "that will best indicate the relevance of the resource "+\
+            "to the information need of the teacher. Do not paraphrase. Only quote the text."
+        self.response_instructions = "Respond with ONLY a JSON list of objects"+ \
+            "where the keys are 'url' and 'response'. 'response' should be a string"+ \
+            f"of text containing the search snippet."
+        self.url_level_cache = URLContentLevelCache('enhanced_snippets')
+
+    def classify_fresh(self, task_desc, url_content_batch):
+        prompt = f"""{self.persona}
+        {self.task}
+        Information Need:
+        {task_desc}
+        Resource content by URL: {url_content_batch}
+        {self.response_instructions}"""
+        response = self.claude.ask(prompt)
+        response = json.loads(response)
+        return response
+
+    def enhance(self, url_content_batch, task_desc):
+        return self.url_level_cache.get_or_fetch_batch(url_content_batch, 
+                                                       partial(self.classify_fresh, task_desc))

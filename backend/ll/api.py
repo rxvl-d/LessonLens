@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, Response
 
 from ll.summary import Summarizer
 from ll.cache import WebPageCache
-from ll.claude import EducationalLevel, Subject, ResourceType
+from ll.claude import EducationalLevel, Subject, ResourceType, Snippets
 import logging
 
 log = logging.getLogger(__name__)
@@ -13,6 +13,7 @@ pages = WebPageCache()
 educational_levels = EducationalLevel()
 subjects = Subject()
 resource_types = ResourceType()
+snippets = Snippets()
 summarizer = Summarizer(educational_levels, resource_types)
 
 class Config:
@@ -75,6 +76,23 @@ def enhanced_snippets():
         urls = request.json.get('urls', [])
         task_desc = request.json.get('task_desc')
         assert task_desc is not None
+        urls_to_text = [{
+            "url": url, 
+            "content_type": "text", 
+            "content": pages.cache(url)['text'][:Config.TEXT_LIMIT],
+            "facet": task_desc} 
+                        for url in urls]
+        def to_map(data):
+            return {d['url']: d['response'] for d in data}
+        urls_to_enhanced_snippet = to_map(snippets.enhance(urls_to_text, task_desc))
+        results = [
+            {'url': url, 
+             'data': {
+                 'enhancedSnippet': urls_to_enhanced_snippet[url],
+                 }} for url in urls]
+        response = jsonify({'results':results})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
         
         # Generate simple enhanced snippets for each URL
         snippets_list = []

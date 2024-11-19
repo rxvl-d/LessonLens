@@ -120,11 +120,12 @@ class URLContentLevelCache:
        self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens' / label
        self.cache_dir.mkdir(exist_ok=True, parents=True)
 
-    def _path(self, url, content_type):
-        return self.cache_dir / hash(url+':'+content_type)
+    def _path(self, url, content_type, facet=None):
+        to_hash = url+':'+content_type if facet is None else url+':'+content_type+':'+facet
+        return self.cache_dir / hash(to_hash)
 
-    def _load_cache(self, url, content_type):
-        path = self._path(url, content_type)
+    def _load_cache(self, url, content_type, facet=None):
+        path = self._path(url, content_type, facet)
         if path.exists():
             with open(path, 'r') as f:
                 is_empty = f.read().strip() == ''
@@ -136,41 +137,37 @@ class URLContentLevelCache:
         else:
             return None
 
-    def _save_cache(self, url, content_type, data):
-        path = self._path(url, content_type)
+    def _save_cache(self, url, content_type, data, facet=None):
+        path = self._path(url, content_type, facet)
         with open(path, 'w') as f:
             json.dump(data, f)
     
-    def get(self, url, content_type):
-        return self._load_cache(url, content_type)
-    
-    def set(self, url, content_type, data):
-        self._save_cache(url, content_type, data)
-
     def get_or_fetch_batch(self, batch, fetch_fn):
         to_fetch = list()
         from_cache = list()
         for url_data in batch:
             url = url_data['url']
             content_type = url_data['content_type']
-            cached = self.get(url, content_type)
+            facet = url_data.get('facet')
+            truncated_facet = facet[:100] if facet is not None else None
+            cached = self._load_cache(url, content_type, facet)
             if cached is not None:
                 from_cache.append(cached)
-                log.debug(f"Cache hit for {url} {content_type} {self.label}")
+                log.debug(f"Cache hit for {url} {content_type} {truncated_facet} {self.label}")
             else:
-                log.info(f"Cache miss for {url} {content_type} {self.label}")
+                log.info(f"Cache miss for {url} {content_type} {truncated_facet} {self.label}")
                 to_fetch.append(url_data)
         if len(to_fetch) == 0:
             return from_cache
         classified = fetch_fn(to_fetch)
-        def find_content_type(url):
+        def find_content_type_and_facet(url):
             for url_data in to_fetch:
                 if url_data['url'] == url:
-                    return url_data['content_type']
+                    return url_data['content_type'], url_data.get('facet')
         for url_data in classified:
             url = url_data['url']
-            content_type = find_content_type(url)
+            content_type, facet = find_content_type_and_facet(url)
             assert content_type is not None
             url_data['content_type'] = content_type
-            self.set(url, content_type, url_data)
+            self._save_cache(url, content_type, url_data, facet)
         return from_cache + classified 
