@@ -144,7 +144,7 @@ class Snippets:
             "to the information need of the teacher. Do not paraphrase. Only quote the text."
         self.response_instructions = "Respond with ONLY a JSON list of objects"+ \
             "where the keys are 'url' and 'response'. 'response' should be a string"+ \
-            f"of text containing the search snippet."
+            f"of text containing the search snippet. Do not include notes or additional commentary."
         self.url_level_cache = URLContentLevelCache('enhanced_snippets')
 
     def classify_fresh(self, task_desc, url_content_batch):

@@ -88,27 +88,11 @@ def enhanced_snippets():
         results = [
             {'url': url, 
              'data': {
-                 'enhancedSnippet': urls_to_enhanced_snippet[url],
+                 'enhancedSnippet': urls_to_enhanced_snippet.get(url),
                  }} for url in urls]
         response = jsonify({'results':results})
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
-        
-        # Generate simple enhanced snippets for each URL
-        snippets_list = []
-        for url in urls:
-            snippet_data = {
-                'url': url,
-                'data': {
-                    'enhancedSnippet': "This is an enhanced search result snippet that provides a better description of the page content. It should be more informative than the original snippet."
-                }
-            }
-            snippets_list.append(snippet_data)
-
-        response = jsonify({'results': snippets_list})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response
-
         
 @api.route('/study-settings', methods=['OPTIONS', 'POST'])
 def study_settings():

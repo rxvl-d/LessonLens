@@ -83,8 +83,11 @@ class Summarizer:
 
             for result in resource_types:
                 response = result['response']
-                for typ in response:
-                    resource_types_count[typ] = resource_types_count.get(typ, 0) + 1
+                if type(response) == list:
+                    for typ in response:
+                        resource_types_count[typ] = resource_types_count.get(typ, 0) + 1
+                elif type(response) == str:
+                    resource_types_count[response] = resource_types_count.get(response, 0) + 1
             
             
             # Convert counts to percentages
