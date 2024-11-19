@@ -68,7 +68,6 @@ class Summarizer:
                           for r in serp_data['results']]
             educational_levels = self.education_level_classifier.classify(input_data)
             resource_types = self.resource_type_classifier.classify(input_data)
-            print(resource_types)
             # Initialize counters for other classifications
             educational_levels_count = {}
             resource_types_count = {}
