@@ -68,6 +68,7 @@ class Summarizer:
                           for r in serp_data['results']]
             educational_levels = self.education_level_classifier.classify(input_data)
             resource_types = self.resource_type_classifier.classify(input_data)
+            print(resource_types)
             # Initialize counters for other classifications
             educational_levels_count = {}
             resource_types_count = {}
@@ -83,8 +84,8 @@ class Summarizer:
 
             for result in resource_types:
                 response = result['response']
-                for level in response:
-                    resource_types_count[level] = educational_levels_count.get(level, 0) + 1
+                for typ in response:
+                    resource_types_count[typ] = resource_types_count.get(typ, 0) + 1
             
             
             # Convert counts to percentages

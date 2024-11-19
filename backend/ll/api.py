@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response
 
 from ll.summary import Summarizer
 from ll.cache import WebPageCache
@@ -30,8 +30,14 @@ def summary():
     if request.method == 'OPTIONS':
         return handle_options_request()
     elif request.method == 'POST':
-        return summarizer.summarize(request.json)
-
+        response = summarizer.summarize(request.json)
+        try:
+            response_str = json.dumps(response, indent=2)
+            jresponse = Response(response_str, mimetype='application/json')
+        except Exception as e:
+            log.error(f"Error in summarization", exc_info=e)
+            jresponse = jsonify({'error': 'Error in summarization'})
+        return jresponse
         
 @api.route('/metadata', methods=['POST', 'OPTIONS'])
 def metadata():
