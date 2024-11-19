@@ -8,7 +8,7 @@ import trafilatura
 import logging
 
 log = logging.getLogger(__name__)
-logging.getLogger("trafilatura").setLevel(logging.WARNING)
+logging.getLogger("trafilatura").setLevel(logging.FATAL)
 
 def hash(url):
     return hashlib.md5(url.encode()).hexdigest()
@@ -71,6 +71,9 @@ class WebPageCache:
             text=trafilatura.extract(self.fetch_html(url)) or ""
             with open(text_path, 'w') as f:
                 f.write(text)
+            else:
+                with open(self._error_path(url), 'a') as f:
+                    json.dump({"url": url, "error": "Could not extract text"}, f)
         with open(text_path, 'r') as f:
             return f.read()
             
@@ -107,7 +110,7 @@ class PromptLevelCache:
     def get_or_fetch(self, prompt, fetch_fn):
         response = self.get(prompt)
         if response is None:
-            log.info(f"Cache miss for prompt: {prompt[:100]}...")
+            log.debug(f"Cache miss for prompt: {prompt[:100]}...")
             response = fetch_fn(prompt)
             self.set(prompt, response)
         else:
@@ -155,7 +158,7 @@ class URLContentLevelCache:
                 from_cache.append(cached)
                 log.debug(f"Cache hit for {url} {content_type} {truncated_facet} {self.label}")
             else:
-                log.info(f"Cache miss for {url} {content_type} {truncated_facet} {self.label}")
+                log.debug(f"Cache miss for {url} {content_type} {truncated_facet} {self.label}")
                 to_fetch.append(url_data)
         if len(to_fetch) == 0:
             return from_cache
