@@ -71,9 +71,6 @@ class WebPageCache:
             text=trafilatura.extract(self.fetch_html(url)) or ""
             with open(text_path, 'w') as f:
                 f.write(text)
-            else:
-                with open(self._error_path(url), 'a') as f:
-                    json.dump({"url": url, "error": "Could not extract text"}, f)
         with open(text_path, 'r') as f:
             return f.read()
             
