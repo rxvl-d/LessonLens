@@ -9,6 +9,7 @@ import logging
 
 log = logging.getLogger(__name__)
 logging.getLogger("trafilatura").setLevel(logging.FATAL)
+logging.getLogger("urllib3").setLevel(logging.FATAL)
 
 def hash(url):
     return hashlib.md5(url.encode()).hexdigest()
