@@ -55,22 +55,25 @@ class WebPageCache:
     def fetch_html(self, url):
         html_path = self._html_path(url)
         if not os.path.exists(html_path):
-            html =trafilatura.fetch_url(url) or ""
-            with open(html_path, 'w') as f:
-                f.write(html)
+            return None
+            # html =trafilatura.fetch_url(url) or ""
+            # with open(html_path, 'w') as f:
+            #     f.write(html)
         with open(html_path, 'r') as f:
             return f.read()
 
     def fetch_text(self, url):
         html_path = self._html_path(url)
         text_path = self._text_path(url)
-        if not os.path.exists(html_path):
-            log.warning(f"HTML not found for {url}")
+        # if not os.path.exists(html_path):
+        #     log.warning(f"HTML not found for {url}")
+        #     return None
+        # elif not os.path.exists(text_path):
+        if not os.path.exists(text_path):
             return None
-        elif not os.path.exists(text_path):
-            text=trafilatura.extract(self.fetch_html(url)) or ""
-            with open(text_path, 'w') as f:
-                f.write(text)
+            # text=trafilatura.extract(self.fetch_html(url)) or ""
+            # with open(text_path, 'w') as f:
+            #     f.write(text)
         with open(text_path, 'r') as f:
             return f.read()
             
