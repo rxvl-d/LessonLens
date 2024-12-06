@@ -51,7 +51,7 @@ def metadata_endpoint():
         return handle_options_request()
     elif request.method == 'POST':
         response = metadata.enrich(request.json['results'])
-        response = jsonify({'results':response})
+        response = jsonify(response)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 
@@ -61,7 +61,7 @@ def enhanced_snippets():
         return handle_options_request()
     elif request.method == 'POST':
         response = snippets.enhance(request.json['results'])
-        response = jsonify({'results':response})
+        response = jsonify(response)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 
