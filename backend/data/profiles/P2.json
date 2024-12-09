@@ -2,7 +2,7 @@
 "tasks":[
   {
     "feature_flags": [],
-    "search_task": "Find age-appropriate examples of probability misconceptions and common student errors when first learning about chance, specifically focusing on materials suitable for 8th graders who haven't had formal probability instruction.",
+    "search_task": "Find age-appropriate examples of probability misconceptions and common student errors when first learning about chance, specifically focusing on materials suitable for 8th graders who haven't had formal probability instruction."
   },
   {
     "feature_flags": ["summary", "snippets"],
@@ -14,7 +14,7 @@
   },
   {
     "feature_flags": ["summary", "metadata"],
-    "search_task": "Locate teaching materials that demonstrate the difference between theoretical and experimental probability using regular geometric solids (cubes, rectangular prisms, etc.) including specific mathematical explanations appropriate for 13-14 year olds.",
+    "search_task": "Locate teaching materials that demonstrate the difference between theoretical and experimental probability using regular geometric solids (cubes, rectangular prisms, etc.) including specific mathematical explanations appropriate for 13-14 year olds."
   },
   {
     "feature_flags": [],

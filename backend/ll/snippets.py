@@ -19,6 +19,14 @@ class SnippetEnhancer:
               content = fallback_content
             snippet = content_based_adaptive_snippet(content, relevance_dimensions)
             if snippet:
-              summary_part['enhanced_snippet'] = ". ".join(snippet)
+              summary_part['enhanced_snippet'] = ". ".join([read_answer(s) for s in snippet])
               snippets.append(summary_part)
         return snippets
+
+def read_answer(a):
+  if type(a) == dict:
+    return list(a.values())[0]
+  elif type(a) == str:
+    return a
+  else:
+    return str(a)
