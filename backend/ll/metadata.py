@@ -22,13 +22,14 @@ class MetadataEnricher:
               content = fallback_content
             total += 1
             response = content_based_gpt_metadata_inference(content)
-            metadata_part['assesses'] = response['assesses']
-            metadata_part['teaches'] = response['teaches']
-            metadata_part['educational_level'] = response['educational_level']
-            metadata_part['educational_role'] = response['educational_role']
-            metadata_part['educational_use'] = response['educational_use']
-            metadata_part['learning_resource_type'] = response['learning_resource_type']
-            metadatas.append(metadata_part)
+            if response:
+              metadata_part['assesses'] = response['assesses']
+              metadata_part['teaches'] = response['teaches']
+              metadata_part['educational_level'] = response['educational_level']
+              metadata_part['educational_role'] = response['educational_role']
+              metadata_part['educational_use'] = response['educational_use']
+              metadata_part['learning_resource_type'] = response['learning_resource_type']
+              metadatas.append(metadata_part)
         
         print("-----------")
         print(hit/total)

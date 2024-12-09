@@ -164,7 +164,10 @@ def parse_json(response_text):
 
 def content_based_gpt_metadata_inference(content):
   response_text = prompt_cache.get_or_fetch(content, fetch_content_based_gpt_metadata_inference)
-  return parse_json(response_text)
+  if response_text:
+    return parse_json(response_text)
+  else:
+    return None
 
 def get_gpt4_labels(prompt):
     response = client_openai.chat.completions.create(
@@ -175,6 +178,32 @@ def get_gpt4_labels(prompt):
     response_text = response.choices[0].message.content
     return response_text
 
+def fetch_content_based_gpt_adaptive_snippet(content_dims):
+  content, relevance_dimensions = content_dims
+  prompt = f"""
+  Respond to the following questions given the following content.
+  
+  Content:
+  {content} 
+
+  Questions:
+  {relevance_dimensions}
+
+  Repond in JSON format with a list of 3 answers. Keep the answers to one sentence each and brief.
+  """
+  try:
+    response = get_gpt4_labels(prompt)
+    return response
+  except Exception as e:
+    print(e)
+    return None
+  
+def content_based_adaptive_snippet(content, relevance_dimensions):
+  response_text = prompt_cache.get_or_fetch((content,tuple(relevance_dimensions)), fetch_content_based_gpt_adaptive_snippet)
+  if response_text:
+    return parse_json(response_text)
+  else:
+    return None
 
 def fetch_content_based_gpt_metadata_inference(content):
     prompt = """

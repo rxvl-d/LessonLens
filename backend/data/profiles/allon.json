@@ -2,7 +2,10 @@
 "tasks":[
   {
     "feature_flags": ["snippets", "metadata", "summary"],
-    "search_task": "You are a 7th grade mathematics teacher at a Gymnasium in Niedersachsen. Your class has 24 students with basic understanding of angle measurement from primary school. You are preparing to introduce the topic of angle relationships in triangles.Find appropriate practice exercises for students to understand that the sum of angles in a triangle equals 180 degrees. You need exercises that allow students to verify this property through measurement."
+    "search_task": "You are a 7th grade mathematics teacher at a Gymnasium in Niedersachsen. Your class has 24 students with basic understanding of angle measurement from primary school. You are preparing to introduce the topic of angle relationships in triangles.Find appropriate practice exercises for students to understand that the sum of angles in a triangle equals 180 degrees. You need exercises that allow students to verify this property through measurement.",
+   "relevance_dimensions": ["What kinds of exercises are included in this resource?",
+"What non-textual approaches does this resource use?",
+"What kind of exercises does the resource contain?"]
   }
 ]}
 

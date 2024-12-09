@@ -15,7 +15,6 @@ pages = WebPageCache()
 educational_levels = EducationalLevel()
 subjects = Subject()
 resource_types = ResourceType()
-snippets = Snippets()
 summarizer = Summarizer(educational_levels, resource_types)
 metadata = MetadataEnricher(pages)
 snippets = SnippetEnhancer(pages)
@@ -60,7 +59,7 @@ def enhanced_snippets():
     if request.method == 'OPTIONS':
         return handle_options_request()
     elif request.method == 'POST':
-        response = snippets.enhance(request.json['results'])
+        response = snippets.enhance(request.json['results'], request.json['relevance_dimensions'])
         response = jsonify(response)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
