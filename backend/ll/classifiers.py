@@ -1,3 +1,6 @@
+import json
+import openai
+import os
 import numpy as np
 import random
 import pandas as pd
@@ -105,4 +108,150 @@ def content_based_learning_resource_classifier(url):
     return df.iloc[0].learning_resource_types
   else:
     return "Unclear"
+
+from ll.cache import PromptLevelCache
+prompt_cache = PromptLevelCache()
+
+def content_based_gpt_metadata_inference(content):
+  return prompt_cache.get_or_fetch(content, fetch_content_based_gpt_metadata_inference)
+
+def fetch_content_based_gpt_metadata_inference(content):
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+
+    prompt = f"""
+    Extract educational metadata from the following content based on LRMI definitions. 
+    Use these fields:
+    1. assesses (string): What skills or knowledge does this resource evaluate?
+    2. teaches (string): What skills or knowledge does this resource impart?
+    3. educational_level (list): Relevant levels from [Grundschule, Sek. I, Sek. II, Higher Education].
+    4. educational_role (list): Applicable roles from [student, teacher, administrator, mentor, instructional_designer, parent_guardian, researcher, support_staff].
+    5. educational_use (list): Applicable uses are [""" + ','.join([u['use'] for u in EDUCATIONAL_USES])+ """].
+    6. learning_resource_type (list): Applicable types such as [exercise, simulation, questionnaire, diagram, etc.].
+
+    Content:
+    {content}
+
+    Respond only in JSON format with the fields: "assesses", "teaches", "educational_level", "educational_role", "educational_use", and "learning_resource_type".
+    """
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are an educational metadata extractor."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        # Parse and return the JSON response
+        metadata = json.loads(response["choices"][0]["message"]["content"])
+        return metadata
+
+    except Exception as e:
+        print(e)
+        return None
+
+def content_based_educational_use_classifier(url):
+  random.choice([u['use'] for u in EDUCATIONAL_USES])
   
+# Predefined list of educational uses
+EDUCATIONAL_USES = [
+    {
+        "use": "assessment",
+        "description": "For tests, quizzes, and evaluation purposes",
+        "examples": ["tests", "quizzes", "exams", "evaluations", "self-assessment"]
+    },
+    {
+        "use": "practice",
+        "description": "For reinforcing skills through repetition",
+        "examples": ["exercises", "drills", "practice problems", "worksheets"]
+    },
+    {
+        "use": "tutorial",
+        "description": "For direct instruction and guided learning",
+        "examples": ["lessons", "guides", "walkthroughs", "demonstrations"]
+    },
+    {
+        "use": "research",
+        "description": "For investigation and inquiry-based learning",
+        "examples": ["research projects", "investigations", "data analysis"]
+    },
+    {
+        "use": "discussion",
+        "description": "For promoting dialogue and critical thinking",
+        "examples": ["debate topics", "discussion prompts", "conversation starters"]
+    },
+    {
+        "use": "case_study",
+        "description": "For analyzing real-world examples",
+        "examples": ["case studies", "real-world scenarios", "practical examples"]
+    },
+    {
+        "use": "laboratory",
+        "description": "For hands-on experimentation",
+        "examples": ["lab work", "experiments", "practical exercises"]
+    },
+    {
+        "use": "presentation",
+        "description": "For presenting information",
+        "examples": ["slides", "demonstrations", "visual aids"]
+    },
+    {
+        "use": "reference",
+        "description": "For looking up information",
+        "examples": ["reference materials", "glossaries", "guides"]
+    },
+    {
+        "use": "simulation",
+        "description": "For practicing in simulated environments",
+        "examples": ["simulations", "virtual labs", "role-playing scenarios"]
+    },
+    {
+        "use": "collaborative",
+        "description": "For group learning activities",
+        "examples": ["group projects", "team activities", "peer learning"]
+    },
+    {
+        "use": "flipped_learning",
+        "description": "For self-paced pre-class preparation",
+        "examples": ["pre-class materials", "self-study resources", "preparatory content"]
+    }
+]
+
+# Prompt template for LLM
+EDUCATIONAL_USE_PROMPT = """
+Given the following content, identify the most appropriate educational use(s) from the predefined list below. Consider the content's purpose, structure, and intended learning outcomes.
+
+Content to analyze:
+{content}
+
+Predefined educational uses:
+{uses}
+
+Please return a list of the most appropriate educational uses that apply to this content, ranked by relevance. For each identified use, provide a brief explanation of why it fits.
+
+Format your response as:
+1. [Educational Use]: [Explanation]
+2. [Educational Use]: [Explanation]
+(etc.)
+"""
+
+def get_educational_use_prompt(content):
+    """
+    Generate a formatted prompt for identifying educational uses in given content
+    
+    Args:
+        content (str): The educational content to analyze
+        
+    Returns:
+        str: Formatted prompt for LLM
+    """
+    # Format the uses list for the prompt
+    uses_list = "\n".join([f"- {use['use']}: {use['description']}" 
+                          for use in EDUCATIONAL_USES])
+    
+    # Format the complete prompt
+    return EDUCATIONAL_USE_PROMPT.format(
+        content=content,
+        uses=uses_list
+    )

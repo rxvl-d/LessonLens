@@ -40,7 +40,7 @@ class WebPageCache:
         return self._url_path(url) / 'index.html'
 
     def _text_path(self, url):
-        return self._url_path(url) / 'trafilatura.txt'
+        return self._url_path(url) / 'playwright.txt'
     
     def _screenshot_path(self, url):
         return self._url_path(url) / 'screenshot.png'
@@ -87,7 +87,7 @@ class PromptLevelCache:
     def __init__(self):
         self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens'
         self.cache_dir.mkdir(exist_ok=True)
-        self.cache_path = self.cache_dir / 'claude_cache.pkl'
+        self.cache_path = self.cache_dir / 'gpt_cache.pkl'
         self.cache = self._load_cache()
 
     def _load_cache(self):

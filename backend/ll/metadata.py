@@ -5,19 +5,19 @@ class MetadataEnricher:
         self.web_page_cache = web_page_cache
     
     def enrich(self, serp_data):
-        summary = []
+        metadatas = []
         for r in serp_data:
-            summary_part = {}
-            summary_part['url'] = url = r['url']
-            summary_part['title'] = title = r['title']
-            summary_part['description'] = description = r['description']
-            summary_part['content'] = content = self.web_page_cache.fetch_text(url)
-            summary_part['is_commercial'] = commercial_classifier(url, title, description, content)
-            summary_part['educational_news_sales'] = page_classifier(url, title, description, content)
-            summary_part['audience'] = audience_classifier(url, title, description, content)
-            summary_part['source_institution_type'] = source_classifier(url, title, description, content)
-            summary_part['education_level'] = content_based_ed_level_classifier(url)
-            # summary_part['learning_goals'] = content_based_learning_goal_classifier(url)
-            summary_part['educational_resource_types'] = content_based_learning_resource_classifier(url)
-            summary.append(summary_part)
-        return summary
+            metadata_part = {}
+            metadata_part['url'] = url = r['url']
+            title = r['title']
+            description = r['description']
+            content = self.web_page_cache.fetch_text(url) or f"Title: {title}\nDescription: {description}"
+            response = content_based_gpt_metadata_inference(content)
+            metadata_part['assesses'] = response['assesses']
+            metadata_part['teaches'] = response['teaches']
+            metadata_part['educational_level'] = response['educational_level']
+            metadata_part['educational_role'] = response['educational_role']
+            metadata_part['educational_use'] = response['educational_use']
+            metadata_part['learning_resource_type'] = response['learning_resource_type']
+            metadatas.append(metadata_part)
+        return metadatas
