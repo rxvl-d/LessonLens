@@ -95,6 +95,9 @@ class PromptLevelCache:
         if self.cache_path.exists():
             with open(self.cache_path, 'rb') as f:
                 self.cache = pickle.load(f)
+        else:
+            self.cache = {}
+            self._save_cache()
 
     def _save_cache(self):
         with open(self.cache_path, 'wb') as f:

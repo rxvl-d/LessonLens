@@ -1,5 +1,5 @@
 import json
-import openai
+from openai import OpenAI
 import os
 import numpy as np
 import random
@@ -111,13 +111,72 @@ def content_based_learning_resource_classifier(url):
 
 from ll.cache import PromptLevelCache
 prompt_cache = PromptLevelCache()
+client_openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+import json
+import re
+
+def parse_json(response_text):
+    # Try to find JSON content between triple backticks
+    code_pattern = r"```(?:json)?\s*([\s\S]*?)\s*```"
+    code_matches = re.findall(code_pattern, response_text)
+    
+    # Try direct JSON pattern matching if no code blocks found
+    json_pattern = r"\{[\s\S]*\}"
+    
+    for match in code_matches:
+        try:
+            return json.loads(match)
+        except json.JSONDecodeError:
+            continue
+    
+    # Try to find JSON directly in the text
+    json_matches = re.findall(json_pattern, response_text)
+    
+    for match in json_matches:
+        try:
+            return json.loads(match)
+        except json.JSONDecodeError:
+            continue
+            
+    # Clean up common LLM JSON formatting issues
+    def clean_json_text(text):
+        # Remove any leading/trailing whitespace and quotes
+        text = text.strip().strip('"\'')
+        # Replace unicode quotes with standard quotes
+        text = text.replace('"', '"').replace('"', '"')
+        # Replace single quotes with double quotes
+        text = text.replace("'", '"')
+        # Fix common boolean and null formatting
+        text = re.sub(r'\bTrue\b', 'true', text)
+        text = re.sub(r'\bFalse\b', 'false', text)
+        text = re.sub(r'\bNone\b', 'null', text)
+        return text
+    
+    # Try one more time with cleaned text
+    try:
+        cleaned_text = clean_json_text(response_text)
+        if '{' in cleaned_text and '}' in cleaned_text:
+            return json.loads(cleaned_text)
+    except json.JSONDecodeError:
+        pass
+        
+    return {}
 
 def content_based_gpt_metadata_inference(content):
-  return prompt_cache.get_or_fetch(content, fetch_content_based_gpt_metadata_inference)
+  response_text = prompt_cache.get_or_fetch(content, fetch_content_based_gpt_metadata_inference)
+  return parse_json(response_text)
+
+def get_gpt4_labels(prompt):
+    response = client_openai.chat.completions.create(
+        model="gpt-4o-2024-08-06",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
+    response_text = response.choices[0].message.content
+    return response_text
+
 
 def fetch_content_based_gpt_metadata_inference(content):
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-
     prompt = f"""
     Extract educational metadata from the following content based on LRMI definitions. 
     Use these fields:
@@ -135,18 +194,8 @@ def fetch_content_based_gpt_metadata_inference(content):
     """
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are an educational metadata extractor."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-
-        # Parse and return the JSON response
-        metadata = json.loads(response["choices"][0]["message"]["content"])
-        return metadata
-
+        response = get_gpt4_labels(prompt)
+        return response
     except Exception as e:
         print(e)
         return None
