@@ -82,3 +82,27 @@ def resource_types(content):
 
 def learning_goals(content):
     return random.choices([''])
+
+gdf = pd.read_pickle('data/metadata.pkl')
+
+def content_based_ed_level_classifier(url):
+  df = gdf[gdf.url == url]
+  if df.shape[0] > 0:
+    return df.iloc[0].educational_levels
+  else:
+    return "Unclear"
+
+def content_based_learning_goal_classifier(url):
+  df = gdf[gdf.url == url]
+  if df.shape[0] > 0:
+    return df.iloc[0].learning_goals
+  else:
+    return "Unclear"
+
+def content_based_learning_resource_classifier(url):
+  df = gdf[gdf.url == url]
+  if df.shape[0] > 0:
+    return df.iloc[0].learning_resource_types
+  else:
+    return "Unclear"
+  

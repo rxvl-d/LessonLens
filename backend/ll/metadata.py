@@ -16,8 +16,8 @@ class MetadataEnricher:
             summary_part['educational_news_sales'] = page_classifier(url, title, description, content)
             summary_part['audience'] = audience_classifier(url, title, description, content)
             summary_part['source_institution_type'] = source_classifier(url, title, description, content)
-            summary_part['education_level'] = ed_level_classifier(url, title, description, content)
-            summary_part['learning_goals'] = ed_level_classifier(url, title, description, content)
-            summary_part['educational_resource_types'] = ed_level_classifier(url, title, description, content)
+            summary_part['education_level'] = content_based_ed_level_classifier(url)
+            # summary_part['learning_goals'] = content_based_learning_goal_classifier(url)
+            summary_part['educational_resource_types'] = content_based_learning_resource_classifier(url)
             summary.append(summary_part)
         return summary
