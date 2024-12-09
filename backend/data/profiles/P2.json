@@ -1,0 +1,34 @@
+
+
+
+High Complexity Tasks:
+
+
+{"subject": "math",
+"tasks":[
+  {
+    "feature_flags": [],
+    "search_task": "Find age-appropriate examples of probability misconceptions and common student errors when first learning about chance, specifically focusing on materials suitable for 8th graders who haven't had formal probability instruction."
+  },
+  {
+    "feature_flags": ["summary", "snippets"],
+    "search_task": "Investigate different approaches to teaching the law of large numbers that: <ul> <li>Use digital tools or physical objects</li> <li>Help students visualize the convergence of relative frequencies</li> <li>Account for different student learning speeds</li> <li>Include opportunities for group work</li> <li>Can be completed within 2-3 class periods</li> </ul> "
+  },
+  {
+    "feature_flags": ["summary", "metadata"],
+    "search_task": "Locate teaching materials that demonstrate the difference between theoretical and experimental probability using regular geometric solids (cubes, rectangular prisms, etc.) including specific mathematical explanations appropriate for 13-14 year olds."
+  },
+  {
+    "feature_flags": [],
+    "search_task": "Teaching probability to a 9th grade class of 30 students at a Gymnasium in Niedersachsen. Find materials to design a sequence of lessons where students first make conjectures about probabilities with partially symmetric objects, then test these through experiments, and finally analyze how their experimental results compare to theoretical predictions as sample size increases."
+  },
+  {
+    "feature_flags": ["summary", "snippets"],
+    "search_task": "Teaching a 9th grade math class of 27 students at a Gymnasium in Niedersachsen. Design a multi-lesson investigation where students use both absolute frequencies and tree diagrams to solve complex two-stage probability problems, requiring them to justify their solutions using path rules and verify their predictions through practical experiments."
+  },
+  {
+    "feature_flags": ["summary", "metadata"],
+    "search_task": "Teaching probability to 7th grade students at a Gymnasium in Niedersachsen. Find resources to create a lesson sequence where students: 1) complete a diagnostic worksheet on relative frequencies with coins and dice to assess prior knowledge, 2) learn about fair games through digital simulations and worked examples, and 3) apply their understanding by designing and testing their own fair dice games, documenting their probability calculations and game rules."
+  }
+]}
+
