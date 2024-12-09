@@ -41,7 +41,7 @@ class WebPageCache:
         return self._url_path(url) / 'index.html'
 
     def _text_path(self, url):
-        return self._url_path(url) / 'trafilatura.txt'
+        return self._url_path(url) / 'playwright.txt'
     
     def _screenshot_path(self, url):
         return self._url_path(url) / 'screenshot.png'
@@ -56,22 +56,25 @@ class WebPageCache:
     def fetch_html(self, url):
         html_path = self._html_path(url)
         if not os.path.exists(html_path):
-            html =trafilatura.fetch_url(url) or ""
-            with open(html_path, 'w') as f:
-                f.write(html)
+            return None
+            # html =trafilatura.fetch_url(url) or ""
+            # with open(html_path, 'w') as f:
+            #     f.write(html)
         with open(html_path, 'r') as f:
             return f.read()
 
     def fetch_text(self, url):
         html_path = self._html_path(url)
         text_path = self._text_path(url)
-        if not os.path.exists(html_path):
-            log.warning(f"HTML not found for {url}")
+        # if not os.path.exists(html_path):
+        #     log.warning(f"HTML not found for {url}")
+        #     return None
+        # elif not os.path.exists(text_path):
+        if not os.path.exists(text_path):
             return None
-        elif not os.path.exists(text_path):
-            text=trafilatura.extract(self.fetch_html(url)) or ""
-            with open(text_path, 'w') as f:
-                f.write(text)
+            # text=trafilatura.extract(self.fetch_html(url)) or ""
+            # with open(text_path, 'w') as f:
+            #     f.write(text)
         with open(text_path, 'r') as f:
             return f.read()
             
@@ -85,7 +88,7 @@ class PromptLevelCache:
     def __init__(self):
         self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens'
         self.cache_dir.mkdir(exist_ok=True)
-        self.cache_path = self.cache_dir / 'claude_cache.pkl'
+        self.cache_path = self.cache_dir / 'gpt_cache.pkl'
         self.cache = self._load_cache()
 
     def _load_cache(self):

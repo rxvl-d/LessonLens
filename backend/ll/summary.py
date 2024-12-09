@@ -10,9 +10,11 @@ import pickle
 import nltk
 from nltk.corpus import stopwords
 import logging
+import random
+from ll.classifiers import *
 
 log = logging.getLogger(__name__)
-
+            
 class Summarizer:
     def __init__(self, educational_levels_classifier, resource_types_classifier):
         nltk.download('stopwords')
@@ -49,6 +51,22 @@ class Summarizer:
         except Exception as e:
             log.error(f"Error in topic classification: {e}")
             return {"unknown": 100.0}
+
+    def summarize_v2(self, serp_data):
+        summary = []
+        for r in serp_data:
+            summary_part = {}
+            summary_part['url'] = url = r['url']
+            summary_part['title'] = title = r['title']
+            summary_part['description'] = description = r['description']
+            summary_part['is_commercial'] = commercial_classifier(url, title, description)
+            summary_part['educational_news_sales'] = page_classifier(url, title, description)
+            summary_part['audience'] = audience_classifier(url, title, description)
+            summary_part['source_institution_type'] = source_classifier(url, title, description)
+            summary_part['education_level'] = ed_level_classifier(url, title, description)
+            summary.append(summary_part)
+        return summary
+
 
     def summarize(self, serp_data):
         try:

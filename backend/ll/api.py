@@ -3,6 +3,8 @@ from pathlib import Path
 from flask import Blueprint, request, jsonify, Response
 
 from ll.summary import Summarizer
+from ll.metadata import MetadataEnricher
+from ll.snippets import SnippetEnhancer
 from ll.cache import WebPageCache
 from ll.claude import EducationalLevel, Subject, ResourceType, Snippets
 import logging
@@ -15,6 +17,8 @@ subjects = Subject()
 resource_types = ResourceType()
 snippets = Snippets()
 summarizer = Summarizer(educational_levels, resource_types)
+metadata = MetadataEnricher(pages)
+snippets = SnippetEnhancer(pages)
 
 class Config:
     TEXT_LIMIT = 1000
@@ -31,7 +35,8 @@ def summary():
     if request.method == 'OPTIONS':
         return handle_options_request()
     elif request.method == 'POST':
-        response = summarizer.summarize(request.json)
+        # response = summarizer.summarize(request.json)
+        response = summarizer.summarize_v2(request.json['results'])
         try:
             response_str = json.dumps(response, indent=2)
             jresponse = Response(response_str, mimetype='application/json')
@@ -41,7 +46,27 @@ def summary():
         return jresponse
         
 @api.route('/metadata', methods=['POST', 'OPTIONS'])
-def metadata():
+def metadata_endpoint():
+    if request.method == 'OPTIONS':
+        return handle_options_request()
+    elif request.method == 'POST':
+        response = metadata.enrich(request.json['results'])
+        response = jsonify(response)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+
+@api.route('/enhanced-snippets', methods=['POST', 'OPTIONS'])
+def enhanced_snippets():
+    if request.method == 'OPTIONS':
+        return handle_options_request()
+    elif request.method == 'POST':
+        response = snippets.enhance(request.json['results'])
+        response = jsonify(response)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+
+@api.route('/metadata_v1', methods=['POST', 'OPTIONS'])
+def metadata_v1():
     if request.method == 'OPTIONS':
         return handle_options_request()
     elif request.method == 'POST':
@@ -68,8 +93,8 @@ def metadata():
         return response
 
         
-@api.route('/enhanced-snippets', methods=['POST', 'OPTIONS'])
-def enhanced_snippets():
+@api.route('/enhanced-snippets_v1', methods=['POST', 'OPTIONS'])
+def enhanced_snippets_v1():
     if request.method == 'OPTIONS':
         return handle_options_request()
     elif request.method == 'POST':

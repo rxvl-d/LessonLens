@@ -12,3 +12,5 @@ nltk
 Pillow
 beautifulsoup4
 trafilatura
+pandas
+openai
