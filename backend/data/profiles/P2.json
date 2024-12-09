@@ -20,15 +20,15 @@ High Complexity Tasks:
   },
   {
     "feature_flags": [],
-    "search_task": "Teaching probability to a 9th grade class of 30 students at a Gymnasium in Niedersachsen. Find materials to design a sequence of lessons where students first make conjectures about probabilities with partially symmetric objects, then test these through experiments, and finally analyze how their experimental results compare to theoretical predictions as sample size increases."
+    "search_task": "Research engaging real-world contexts for teaching probability with asymmetric objects that: <ul> <li>Connect to student interests</li> <li>Allow for meaningful data collection</li> <li>Demonstrate why theoretical probability calculations don't always work</li> <li>Include opportunities for students to make and test predictions</li> <li>Support understanding of probability as a forecast</li> </ul> "
   },
   {
     "feature_flags": ["summary", "snippets"],
-    "search_task": "Teaching a 9th grade math class of 27 students at a Gymnasium in Niedersachsen. Design a multi-lesson investigation where students use both absolute frequencies and tree diagrams to solve complex two-stage probability problems, requiring them to justify their solutions using path rules and verify their predictions through practical experiments."
+    "search_task": " Find ready-to-use worksheets or digital materials showing how to introduce tree diagrams for two-stage probability experiments, including worked examples that progress from simple to complex scenarios."
   },
   {
     "feature_flags": ["summary", "metadata"],
-    "search_task": "Teaching probability to 7th grade students at a Gymnasium in Niedersachsen. Find resources to create a lesson sequence where students: 1) complete a diagnostic worksheet on relative frequencies with coins and dice to assess prior knowledge, 2) learn about fair games through digital simulations and worked examples, and 3) apply their understanding by designing and testing their own fair dice games, documenting their probability calculations and game rules."
+    "search_task": "Explore assessment approaches that: <ul> <li>Combine theoretical and experimental probability</li> <li>Include both single and multi-stage experiments</li> <li>Allow students to demonstrate understanding in multiple ways</li> <li>Connect to real-world applications</li> <li>Are appropriate for different skill levels in the class</li> <li>Can show student growth across the unit's key concepts</li> </ul> "
   }
 ]}
 
