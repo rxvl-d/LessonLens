@@ -177,14 +177,14 @@ def get_gpt4_labels(prompt):
 
 
 def fetch_content_based_gpt_metadata_inference(content):
-    prompt = f"""
+    prompt = """
     Extract educational metadata from the following content based on LRMI definitions. 
     Use these fields:
     1. assesses (string): What skills or knowledge does this resource evaluate?
     2. teaches (string): What skills or knowledge does this resource impart?
     3. educational_level (list): Relevant levels from [Grundschule, Sek. I, Sek. II, Higher Education].
     4. educational_role (list): Applicable roles from [student, teacher, administrator, mentor, instructional_designer, parent_guardian, researcher, support_staff].
-    5. educational_use (list): Applicable uses are [""" + ','.join([u['use'] for u in EDUCATIONAL_USES])+ """].
+    5. educational_use (list): Applicable uses are [""" + ','.join([u['use'] for u in EDUCATIONAL_USES])+ f"""].
     6. learning_resource_type (list): Applicable types such as [exercise, simulation, questionnaire, diagram, etc.].
 
     Content:
