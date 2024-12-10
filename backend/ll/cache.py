@@ -7,7 +7,7 @@ from PIL import Image
 import trafilatura
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("cache")
 logging.getLogger("trafilatura").setLevel(logging.FATAL)
 logging.getLogger("urllib3").setLevel(logging.FATAL)
 
@@ -20,6 +20,8 @@ class WebPageCache:
     def __init__(self):
         self.cache_path = Path(os.getenv("HOME")) / '.cache' / 'LessonLens' / 'webpage_cache'
         self.cache_path.mkdir(exist_ok=True, parents=True)
+        self.hit = 0
+        self.miss = 0
     
     def _read_if_exists(self, path, read_as_image=False):
         if os.path.exists(path):    
@@ -64,17 +66,22 @@ class WebPageCache:
             return f.read()
 
     def fetch_text(self, url):
-        html_path = self._html_path(url)
+        # html_path = self._html_path(url)
         text_path = self._text_path(url)
-        if not os.path.exists(html_path):
-            log.warning(f"HTML not found for {url}")
+        # if not os.path.exists(html_path):
+        #     self.fetch_html(url)
+        #     # log.warning(f"HTML not found for {url}")
+        #     return None
+        # elif not os.path.exists(text_path):
+        if not os.path.exists(text_path):
+            self.miss += 1
             return None
-        elif not os.path.exists(text_path):
-        # if not os.path.exists(text_path):
-            # return None
-            text=trafilatura.extract(self.fetch_html(url)) or ""
-            with open(text_path, 'w') as f:
-                f.write(text)
+            # text=trafilatura.extract(self.fetch_html(url)) or ""
+            # with open(text_path, 'w') as f:
+            #     f.write(text)
+        self.hit += 1
+        if (self.hit + self.miss) % 10 == 0:
+            log.info(f"Web Page HIT Rate: {self.hit / (self.hit+self.miss)}")
         with open(text_path, 'r') as f:
             return f.read()
             
@@ -90,6 +97,8 @@ class URLLevelCache:
         self.cache_dir.mkdir(exist_ok=True)
         self.cache_path = self.cache_dir / 'url_cache.pkl'
         self.cache = self._load_cache()
+        self.hit = 0
+        self.miss = 0
 
     def _load_cache(self):
         if self.cache_path.exists():
@@ -105,7 +114,14 @@ class URLLevelCache:
 
     def get(self, key):
         self._load_cache()
-        return self.cache.get(key)
+        out = self.cache.get(key)
+        if out:
+            self.hit += 1
+        else:
+            self.miss += 1
+        if (self.hit + self.miss) % 10 == 0:
+            log.info(f"URL HIT Rate: {self.hit / (self.hit + self.miss)}")
+        return out
 
     def set(self, key, response):
         self.cache[key] = response

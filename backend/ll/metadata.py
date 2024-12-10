@@ -4,6 +4,8 @@ from typing import List, Dict
 import logging
 from threading import Lock
 
+log = logging.getLogger("metadata")
+
 class MetadataEnricher:
     def __init__(self, web_page_cache):
         self.web_page_cache = web_page_cache
@@ -19,9 +21,6 @@ class MetadataEnricher:
             List of enriched metadata
         """
         # Thread-safe counters using Lock
-        hit_counter = {'value': 0}
-        total_counter = {'value': 0}
-        counter_lock = Lock()
         
         def process_single_result(result: Dict) -> Dict:
             """Process a single search result and generate metadata."""
@@ -34,13 +33,8 @@ class MetadataEnricher:
             try:
                 content = self.web_page_cache.fetch_text(url)
                 
-                with counter_lock:
-                    total_counter['value'] += 1
-                
                 if content:
                     content = content[:5000]
-                    with counter_lock:
-                        hit_counter['value'] += 1
                 else:
                     content = f"Title: {title}\nDescription: {description}"
                 
@@ -57,8 +51,6 @@ class MetadataEnricher:
                     
             except Exception as e:
                 logging.error(f"Error processing {url}: {str(e)}")
-                with counter_lock:
-                    total_counter['value'] += 1
                 return None
                 
             return None
@@ -84,9 +76,4 @@ class MetadataEnricher:
                     continue
 
         # Calculate and print hit ratio
-        hit_ratio = hit_counter['value'] / total_counter['value'] if total_counter['value'] > 0 else 0
-        print("-----------")
-        print(hit_ratio)
-        print("-----------")
-        
         return metadatas

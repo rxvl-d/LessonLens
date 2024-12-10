@@ -8,6 +8,9 @@ import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
+import logging
+
+log = logging.getLogger("classifiers")
 
 def train_source_classifier(df):
     domains = df['url'].str.extract(r'https?://([^/]+)')[0]
@@ -44,7 +47,11 @@ def commercial_classifier(url, title, description, content=None):
 def source_classifier(url, title, description, content=None):
     with open('models/source_classifier.pkl', 'rb') as f:
         model = pickle.load(f)
-    domain = url.split('//')[1].split('/')[0]
+    try:
+        domain = url.split('//')[1].split('/')[0]
+    except:
+        log.error(f"Malformed URL: {url}")
+        domain = "None"
     return predict_with_threshold(model, [domain], threshold=0.6)
 
 def page_classifier(url, title, description, content=None):
