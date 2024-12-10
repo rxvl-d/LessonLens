@@ -1,0 +1,20 @@
+{"subject": "math",
+"tasks":[
+  {
+    "feature_flags": [],
+    "search_task": "Find worksheets related to linear equations."
+  },
+  {
+    "feature_flags": ["summary", "snippets"],
+    "search_task": "Investigate ways to give students an intuition about the coefficients of a 2 dimensional linear equation.",
+    "relevance_dimensions": [
+      "What kinds of hands on pedagogical approaches does it offer?", 
+      "What kind of non-textual pedagogical approaches does it offer?", 
+      "What mathematical concepts does it cover?"]
+  },
+  {
+    "feature_flags": ["summary", "metadata"],
+    "search_task": "Locate example problems that connect solving linear equations to every day activities."
+  }
+]}
+
