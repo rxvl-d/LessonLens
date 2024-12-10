@@ -21,7 +21,7 @@ class MetadataEnricher:
               fallback_content = f"Title: {title}\nDescription: {description}"
               content = fallback_content
             total += 1
-            response = content_based_gpt_metadata_inference(content)
+            response = content_based_gpt_metadata_inference(url, content)
             if response:
               metadata_part['assesses'] = response['assesses']
               metadata_part['teaches'] = response['teaches']

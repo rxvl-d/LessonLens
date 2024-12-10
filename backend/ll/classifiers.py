@@ -109,8 +109,8 @@ def content_based_learning_resource_classifier(url):
   else:
     return "Unclear"
 
-from ll.cache import PromptLevelCache
-prompt_cache = PromptLevelCache()
+from ll.cache import URLLevelCache
+url_cache = URLLevelCache()
 client_openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 import json
 import re
@@ -162,8 +162,8 @@ def parse_json(response_text):
         
     return {}
 
-def content_based_gpt_metadata_inference(content):
-  response_text = prompt_cache.get_or_fetch(content, fetch_content_based_gpt_metadata_inference)
+def content_based_gpt_metadata_inference(url, content):
+  response_text = url_cache.get_or_fetch(url, content, fetch_content_based_gpt_metadata_inference)
   if response_text:
     return parse_json(response_text)
   else:
@@ -198,8 +198,8 @@ def fetch_content_based_gpt_adaptive_snippet(content_dims):
     print(e)
     return None
   
-def content_based_adaptive_snippet(content, relevance_dimensions):
-  response_text = prompt_cache.get_or_fetch((content,tuple(relevance_dimensions)), fetch_content_based_gpt_adaptive_snippet)
+def content_based_adaptive_snippet(url, content, relevance_dimensions):
+  response_text =url_cache.get_or_fetch((url,tuple(relevance_dimensions)), (content, relevance_dimensions), fetch_content_based_gpt_adaptive_snippet)
   if response_text:
     return parse_json(response_text)
   else:
@@ -229,10 +229,6 @@ def fetch_content_based_gpt_metadata_inference(content):
         print(e)
         return None
 
-def content_based_educational_use_classifier(url):
-  random.choice([u['use'] for u in EDUCATIONAL_USES])
-  
-# Predefined list of educational uses
 EDUCATIONAL_USES = [
     {
         "use": "assessment",
@@ -295,41 +291,3 @@ EDUCATIONAL_USES = [
         "examples": ["pre-class materials", "self-study resources", "preparatory content"]
     }
 ]
-
-# Prompt template for LLM
-EDUCATIONAL_USE_PROMPT = """
-Given the following content, identify the most appropriate educational use(s) from the predefined list below. Consider the content's purpose, structure, and intended learning outcomes.
-
-Content to analyze:
-{content}
-
-Predefined educational uses:
-{uses}
-
-Please return a list of the most appropriate educational uses that apply to this content, ranked by relevance. For each identified use, provide a brief explanation of why it fits.
-
-Format your response as:
-1. [Educational Use]: [Explanation]
-2. [Educational Use]: [Explanation]
-(etc.)
-"""
-
-def get_educational_use_prompt(content):
-    """
-    Generate a formatted prompt for identifying educational uses in given content
-    
-    Args:
-        content (str): The educational content to analyze
-        
-    Returns:
-        str: Formatted prompt for LLM
-    """
-    # Format the uses list for the prompt
-    uses_list = "\n".join([f"- {use['use']}: {use['description']}" 
-                          for use in EDUCATIONAL_USES])
-    
-    # Format the complete prompt
-    return EDUCATIONAL_USE_PROMPT.format(
-        content=content,
-        uses=uses_list
-    )

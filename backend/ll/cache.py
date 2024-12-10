@@ -84,6 +84,43 @@ class WebPageCache:
         text = self.fetch_text(url)
         return {'html': html, 'text': text}
 
+class URLLevelCache:
+    def __init__(self):
+        self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens'
+        self.cache_dir.mkdir(exist_ok=True)
+        self.cache_path = self.cache_dir / 'url_cache.pkl'
+        self.cache = self._load_cache()
+
+    def _load_cache(self):
+        if self.cache_path.exists():
+            with open(self.cache_path, 'rb') as f:
+                self.cache = pickle.load(f)
+        else:
+            self.cache = {}
+            self._save_cache()
+
+    def _save_cache(self):
+        with open(self.cache_path, 'wb') as f:
+            pickle.dump(self.cache, f)
+
+    def get(self, key):
+        self._load_cache()
+        return self.cache.get(key)
+
+    def set(self, key, response):
+        self.cache[key] = response
+        self._save_cache()
+
+    def get_or_fetch(self, key, input, fetch_fn):
+        response = self.get(key)
+        if response is None:
+            log.debug(f"Cache miss for key: {key}...")
+            response = fetch_fn(input)
+            self.set(key, response)
+        else:
+            log.debug(f"Cache hit for key: {key}")
+        return response
+
 class PromptLevelCache:
     def __init__(self):
         self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens'
