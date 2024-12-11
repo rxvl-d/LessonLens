@@ -1,0 +1,41 @@
+{
+"subject": "chemistry",
+"tasks": [
+{
+"feature_flags": [],
+"search_task": "Find a printable worksheet or activity sheet that helps students practice drawing basic Lewis dot diagrams for simple molecules like H2O, O2, and H2. The worksheet should be suitable for 7th/8th grade students and include clear instructions."
+},
+{
+"feature_flags": ["summary", "metadata"],
+"search_task": "Find a classroom demonstration or experiment using household materials that shows the difference between ionic and covalent bonds. The activity should take no more than 15 minutes of class time and be safe for middle school students to observe."
+},
+{
+"feature_flags": ["summary", "snippets"],
+"search_task": "Find a formative assessment tool or quiz template for testing students' understanding of the differences between ionic and covalent bonds. It should be appropriate for 7th/8th grade and include visual elements like diagrams or models.",
+"relevance_dimensions": [
+"What types of visual representations are included in the assessment?",
+"How are the questions scaffolded for different ability levels?",
+"What feedback mechanisms are built into the assessment?",
+"How does the assessment address common misconceptions about bonding?"
+]
+},
+{
+"feature_flags": [],
+"search_task": "Explore different ways to introduce the concept of electron sharing and transfer to 7th/8th grade students without using complex terminology. Look for analogies, real-world connections, or interactive activities that make these abstract concepts more concrete."
+},
+{
+"feature_flags": ["summary", "snippets"],
+"search_task": "Research creative hands-on modeling activities that help students visualize and understand polar bonds. The activities should use materials that are easily available and be engaging for middle school students.",
+"relevance_dimensions": [
+"What everyday materials are required for the modeling activities?",
+"How do the activities address spatial understanding of molecular polarity?",
+"What scaffolding is provided to help students connect models to concepts?",
+"How are student misconceptions about polarity addressed through the activities?"
+]
+},
+{
+"feature_flags": ["summary", "metadata"],
+"search_task": "Find innovative approaches to help struggling students understand the octet rule and noble gas configuration. Look for teaching strategies that use visualization, games, or other interactive methods suitable for different learning styles in middle school."
+}
+]
+}
