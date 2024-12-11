@@ -200,7 +200,11 @@ def fetch_content_based_gpt_adaptive_snippet(content_dims):
   """
   try:
     response = get_gpt4_labels(prompt)
-    return response
+    summary_response = get_gpt4_labels(f"""
+        Summarize this down to two sentences and use simlple html tags like bold, underline and italics to highlight the important parts for a teacher searching.
+        Content: {response}
+        Respond with a json object with the key: summary.""")
+    return summary_response
   except Exception as e:
     print(e)
     return None
@@ -208,7 +212,7 @@ def fetch_content_based_gpt_adaptive_snippet(content_dims):
 def content_based_adaptive_snippet(url, content, relevance_dimensions):
   response_text =url_cache.get_or_fetch((url,tuple(relevance_dimensions)), (content, relevance_dimensions), fetch_content_based_gpt_adaptive_snippet)
   if response_text:
-    return parse_json(response_text)
+    return parse_json(response_text).get('summary')
   else:
     return None
 

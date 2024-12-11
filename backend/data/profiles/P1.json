@@ -1,0 +1,41 @@
+{
+  "subject": "chemistry",
+  "tasks": [
+    {
+      "feature_flags": [],
+      "search_task": "Find a worksheet-based activity for testing and recording the pH values of common household substances that includes a results table template and clear instructions. The activity should take no more than 30 minutes of class time and require only basic lab equipment"
+    },
+    {
+      "feature_flags": ["summary", "metadata"],
+      "search_task": "Find a student lab report template specifically designed for halide ion precipitation reactions that includes sections for hypothesis, observations, and conclusions. The template should help students connect their observations to the presence of specific ions."
+    },
+    {
+      "feature_flags": ["summary", "snippets"],
+      "search_task": "Find a detailed experimental procedure for flame tests of sodium and potassium that includes a structured observation form for students. The experiment must follow standard safety protocols, be completable within 45 minutes, and use only standard lab equipment. Locate suitable materials.",
+      "relevance_dimensions": [
+        "What safety protocols are included?",
+        "What equipment requirements are specified?",
+        "What kind of student documentation materials are provided?",
+        "How detailed are the experimental procedures?"
+      ]
+    },
+    {
+      "feature_flags": [],
+      "search_task": "Design an introductory lesson that helps students understand why chemical detection methods are important in everyday life. The lesson should include at least two real-world examples and engage students in discussion. Find resources and ideas that don't require specialized equipment and fit within a 45-minute lesson."
+    },
+    {
+      "feature_flags": ["summary", "snippets"],
+      "search_task": "Find ideas and materials to create a lesson sequence that connects pH testing with real-world applications in food chemistry. The activities should allow students to examine food packaging and product labels while practicing scientific documentation. Find suitable resources that include assessment suggestions.",
+      "relevance_dimensions": [
+        "What real-world applications are covered?",
+        "What types of assessment methods are included?",
+        "What documentation practices are incorporated?",
+        "How are food chemistry concepts integrated?"
+      ]
+    },
+    {
+      "feature_flags": ["summary", "metadata"],
+      "search_task": "Find materials to create an activity where students explore how chemical detection methods are used in different professions (e.g., food testing, environmental analysis, quality control). The resources should include interactive elements and be adaptable for a 90-minute block."
+    }
+  ]
+}

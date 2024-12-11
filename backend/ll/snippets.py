@@ -36,7 +36,7 @@ class SnippetEnhancer:
                     
                 snippet = content_based_adaptive_snippet(url, content, relevance_dimensions)
                 if snippet:
-                    summary_part['enhanced_snippet'] = ". ".join([read_answer(s) for s in snippet])
+                    summary_part['enhanced_snippet'] = ". ".join([read_answer(s) for s in snippet]) if type(snippet) == list else snippet
                     return summary_part
                 
             except Exception as e:
