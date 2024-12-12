@@ -36,7 +36,8 @@ class SnippetEnhancer:
                     
                 snippet = content_based_adaptive_snippet(url, content, relevance_dimensions)
                 if snippet:
-                    summary_part['enhanced_snippet'] = ". ".join([read_answer(s) for s in snippet]) if type(snippet) == list else snippet
+                    summary_part['enhanced_snippet'] = \
+                      "<br/> ".join([qna(s) for s in snippet]) if type(snippet) == list else snippet
                     return summary_part
                 
             except Exception as e:
@@ -74,3 +75,10 @@ def read_answer(a):
     return a
   else:
     return str(a)
+
+def qna(a):
+  if type(a) == dict and (set(a.keys()) == {'question', 'answer'}):
+    return f"Q: {a['question']}<br/>A: <i>{a['answer']}</i>"
+  else:
+    return str(a)
+    

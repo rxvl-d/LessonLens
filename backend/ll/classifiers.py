@@ -196,23 +196,22 @@ def fetch_content_based_gpt_adaptive_snippet(content_dims):
   Questions:
   {relevance_dimensions}
 
-  Repond in JSON format with a list of 3 answers. Keep the answers to one sentence each and brief.
+  Repond in JSON format with a list of objects with keys: question and answer. 
+  Keep the answers to one sentence each and brief.
   """
   try:
     response = get_gpt4_labels(prompt)
-    summary_response = get_gpt4_labels(f"""
-        Summarize this down to two sentences and use simlple html tags like bold, underline and italics to highlight the important parts for a teacher searching.
-        Content: {response}
-        Respond with a json object with the key: summary.""")
-    return summary_response
+    return response
   except Exception as e:
     print(e)
     return None
   
 def content_based_adaptive_snippet(url, content, relevance_dimensions):
-  response_text =url_cache.get_or_fetch((url,tuple(relevance_dimensions)), (content, relevance_dimensions), fetch_content_based_gpt_adaptive_snippet)
+  response_text =url_cache.get_or_fetch((url,tuple(relevance_dimensions)), 
+                                        (content, relevance_dimensions), 
+                                        fetch_content_based_gpt_adaptive_snippet)
   if response_text:
-    return parse_json(response_text).get('summary')
+    return parse_json(response_text)
   else:
     return None
 

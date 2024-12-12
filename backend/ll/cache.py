@@ -18,7 +18,7 @@ def hash(url):
 class WebPageCache:
 
     def __init__(self):
-        self.cache_path = Path(os.getenv("HOME")) / '.cache' / 'LessonLens' / 'webpage_cache'
+        self.cache_path = Path('data') /  'webpage_cache'
         self.cache_path.mkdir(exist_ok=True, parents=True)
         self.hit = 0
         self.miss = 0
