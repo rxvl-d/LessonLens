@@ -1,27 +1,59 @@
-Low Complexity Tasks:
-
-1. "You are teaching a 9th grade mathematics class of 25 students at a Gymnasium in Niedersachsen. Your students have a solid foundation in basic geometry and are familiar with right triangles. Find teaching materials to introduce the Pythagorean theorem using a hands-on approach."
-[Single concept, single resource type, standard teaching method]
-
-2. "You are teaching a 9th grade class of 22 students at a Realschule in Niedersachsen. Your students have just learned about right triangles. Find practice problems to help students calculate unknown side lengths in right triangles using the square root operation."
-[Single concept, single resource type, standard teaching method]
-
-3. "You are teaching geometry to a 10th grade class of 24 students at a Gymnasium in Niedersachsen. Find visual materials to explain the concept of similar triangles, focusing on angle correspondence."
-[Single concept, single resource type, standard teaching method]
-
-4. "You are teaching a 9th grade mathematics class of 23 students at a Gymnasium in Niedersachsen. Find exercises to help students practice calculating tangent values in right triangles as a measure of steepness."
-[Single concept, single resource type, standard teaching method]
-
-High Complexity Tasks:
-
-1. "You are teaching a 10th grade class of 26 students at a Gymnasium in Niedersachsen. Students understand basic trigonometry but struggle with applications. Find materials to create a lesson that connects the tangent function to real-world slope calculations and similar triangles, including interactive simulations and practical examples."
-[High: multiple concepts, multiple resource types]
-
-2. "You are teaching a 9th grade class of 24 students at a Realschule in Niedersachsen. Find resources to design a comprehensive lesson that connects the Pythagorean theorem with square roots and their properties, including derivations, proofs, and practical applications."
-[High: concept hierarchy, multiple teaching strategies]
-
-3. "You are teaching geometry to a 10th grade class of 25 students at a Gymnasium in Niedersachsen. Your students have mastered basic trigonometry. Find materials to create a lesson sequence that bridges from right triangle trigonometry to general triangles using the sine and cosine laws, incorporating both mathematical proofs and practical applications."
-[High: multiple concepts, multiple teaching strategies]
-
-4. "You are teaching a 10th grade class of 23 students at a Gymnasium in Niedersachsen. Find resources to develop a lesson that integrates similarity theorems for triangles with trigonometric relationships, including geometric proofs, visual demonstrations, and real-world applications."
-[High: multiple concepts, multiple resource types]
+{
+  "subject": "physics",
+  "tasks": [
+  {
+  "feature_flags": ["summary", "metadata"],
+  "search_task": "Find comprehensive written analogies and physical models for teaching electric current flow that avoid common misconceptions. Look for materials that use tangible demonstrations with everyday objects, suitable for 7th/8th grade.",
+  "relevance_dimensions": [
+  "How effectively does the analogy avoid common electrical misconceptions?",
+  "What level of scaffolding is provided to help students transition from the analogy to the actual concept?",
+  "How well does the model account for both current and energy flow in circuits?"
+  ]
+  },
+  {
+  "feature_flags": [],
+  "search_task": "Find documentation, safety guidelines, and procedural guides about using multimeters in middle school classrooms. Focus on materials that include clear step-by-step instructions and troubleshooting guides.",
+  "relevance_dimensions": [
+  "What safety considerations are explicitly addressed?",
+  "How are complex concepts broken down into manageable steps?",
+  "What assessment methods are included to verify student competency?"
+  ]
+  },
+  {
+  "feature_flags": ["summary", "snippets"],
+  "search_task": "Research technical specifications and documentation of common household devices and their voltage requirements. Look for materials that can be adapted into age-appropriate learning resources for 7th/8th grade.",
+  "relevance_dimensions": [
+  "How well do the examples connect to students' everyday experiences?",
+  "What level of technical detail is appropriate for this age group?",
+  "How are safety considerations integrated into the learning materials?"
+  ]
+  },
+  {
+  "feature_flags": ["summary", "metadata"],
+  "search_task": "Explore different approaches to teaching Ohm's Law through guided discovery. Look for resources that describe inquiry-based learning sequences where students derive the relationship themselves.",
+  "relevance_dimensions": [
+  "What prerequisite knowledge is required for the discovery activities?",
+  "How is mathematical understanding scaffolded throughout the sequence?",
+  "What formative assessment opportunities are built into the discovery process?"
+  ]
+  },
+  {
+  "feature_flags": [],
+  "search_task": "Find documentation about household electrical circuits and power consumption that can be used to create authentic learning tasks. Focus on materials that clearly explain real-world applications.",
+  "relevance_dimensions": [
+  "How well does the material connect to energy conservation concepts?",
+  "What level of mathematical complexity is involved?",
+  "How applicable is the content to students' home environments?"
+  ]
+  },
+  {
+  "feature_flags": ["summary", "snippets"],
+  "search_task": "Research different types of culminating physics projects that integrate multiple electricity concepts. Look for projects that allow for differentiation and real-world connections.",
+  "relevance_dimensions": [
+  "How well does the project integrate theoretical and practical knowledge?",
+  "What opportunities exist for differentiation and student choice?",
+  "How are safety considerations addressed in the project guidelines?"
+  ]
+  }
+  ]
+  }
