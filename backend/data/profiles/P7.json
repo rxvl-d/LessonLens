@@ -1,0 +1,44 @@
+{
+  "subject": "chemistry",
+  "tasks": [
+    {
+      "feature_flags": [],
+      "search_task": "Finden Sie ein druckbares Arbeitsblatt zur Übung der Energieniveaus und Elektronenkonfiguration von Atomen. Das Material sollte für die 9./10. Klasse geeignet sein und schrittweise Anleitungen enthalten."
+    },
+    {
+      "feature_flags": ["summary", "metadata"],
+      "search_task": "Finden Sie ein Experiment oder eine Demonstration zur Visualisierung von geladenen und ungeladenen Teilchen, das mit einfachen Labormaterialien durchführbar ist. Die Aktivität sollte maximal 20 Minuten Unterrichtszeit beanspruchen."
+    },
+    {
+      "feature_flags": ["summary", "metadata"],
+      "search_task": "Finden Sie innovative Unterrichtsmethoden, die die Verbindung zwischen Kernkraft und elektrostatischer Anziehung für leistungsschwächere Schüler verständlich machen. Suchen Sie nach Ansätzen, die verschiedene Lerntypen berücksichtigen.",
+      "relevance_dimensions": [
+        "Wie werden die Bezüge zur Physik hergestellt?",
+        "Welche Visualisierungshilfen werden angeboten?",
+        "Wie wird das Verständnis der Fachbegriffe unterstützt?"
+      ]
+    },
+    {
+      "feature_flags": ["summary", "snippets"],
+      "search_task": "Suchen Sie nach einem diagnostischen Test oder einer Lernstandserhebung zum Thema Ionisierungsenergie und Ionenbildung. Das Material sollte für die 9./10. Klasse geeignet sein und Diagramme oder Modelle einbeziehen.",
+      "relevance_dimensions": [
+        "Wie werden die verschiedenen Kompetenzbereiche (Fachwissen, Erkenntnisgewinnung, Kommunikation) abgedeckt?",
+        "Welche Differenzierungsmöglichkeiten bietet das Material?",
+        "Wie werden typische Fehlvorstellungen zur Ionenbildung berücksichtigt?"
+      ]
+    },
+    {
+      "feature_flags": [],
+      "search_task": "Recherchieren Sie verschiedene didaktische Ansätze zur Einführung des Atombaus mit Fokus auf die Verbindung zwischen Schalenmodell und Periodensystem. Suchen Sie nach Analogien und Modellen, die diese Verbindung verdeutlichen."
+    },
+    {
+      "feature_flags": ["summary", "snippets"],
+      "search_task": "Suchen Sie nach kreativen Modellierungsaktivitäten, die Schülern helfen, den Zusammenhang zwischen Energieniveaus und Ionenbildung zu verstehen.",
+      "relevance_dimensions": [
+        "Wie wird der Übergang vom makroskopischen zum submikroskopischen Verständnis unterstützt?",
+        "Welche Möglichkeiten zur eigenständigen Erkenntnisgewinnung bietet das Material?",
+        "Wie wird die Verwendung der Fachsprache gefördert?"
+      ]
+    }
+  ]
+}
