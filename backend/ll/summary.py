@@ -52,6 +52,66 @@ class Summarizer:
             log.error(f"Error in topic classification: {e}")
             return {"unknown": 100.0}
 
+    def summarize_v3(self, search_task, serp_data):
+        prompt = f"""
+        Given a list of URLs, titles and summaries, 
+        return the list of URLs tagged with various educational attributes.
+        Also rate the importance of attributes given a search task.
+
+        Search Task: {search_task}
+        Input: {serp_data}
+        Output should be in JSON in the form:
+        {{
+          "tagged_urls": [
+            {{
+              "url": "url1",
+              "is_commercial": true/false,
+              "is_educational": true/false, // not educational if it is news or sales
+              "source_institution": ["university", "school", "non-profit foundation", "private teacher", "private company"] // pick all that apply
+              "educational_level": ["Grundschule", "Sekundarstufe I", "Sekundarstufe II", "Higher Education"] // Pick the lowest applicable level
+              "subject": ["Physics", "Chemistry", "Maths"] // Pick one
+              "learning_resource_type": {LEARNING_RESOURCE_TYPES} // Pick all that apply
+            }},
+            {{"url": "url2",
+              "is_commercial": ...}},
+            ... 
+          ],
+          "attribute_importances": [
+            {{ 
+              "attribute": "is_commercial", 
+              "importance" : 1 // on a scale of 1-5
+            }},
+            {{ 
+              "attribute": "is_educational", 
+              "importance" : 1 // on a scale of 1-5
+            }},
+            ...
+          ]
+        }}
+        """
+        response = parse_json(get_gpt4_labels(prompt, fast=True))
+        if (type(response) == dict) and (set(response.keys()) == {'attribute_importances', 'tagged_urls'}):
+          return response
+        else:
+          return None
+
+    def summarize_v3_fast(self, search_task, serp_data):
+        summary = []
+        for r in serp_data:
+            summary_part = {}
+            summary_part['url'] = url = r['url']
+            title = r['title']
+            description = r['description']
+            summary_part['is_commercial'] = 'Non-Commercial' not in commercial_classifier(url, title, description)
+            summary_part['is_educational'] = 'Educational' in page_classifier(url, title, description)
+            summary_part['source_institution'] = source_classifier(url, title, description)
+            summary_part['educational_level'] = ed_level_classifier(url, title, description)
+            summary_part['audience'] = audience_classifier(url, title, description)
+            summary_part['source_institution_type'] = source_classifier(url, title, description)
+            summary.append(summary_part)
+        attr_importances = calculate_attribute_importance(summary)
+        return {'tagged_urls': summary, 'attribute_importances': attr_importances}
+
     def summarize_v2(self, serp_data):
         summary = []
         for r in serp_data:
@@ -120,3 +180,74 @@ class Summarizer:
             return response
         except Exception as e:
             raise e
+
+            
+from collections import Counter
+from typing import List, Dict, Union
+import math
+
+def calculate_attribute_importance(data: List[Dict[str, Union[str, List[str]]]]) -> List[Dict[str, Union[str, float]]]:
+    """
+    Calculate importance scores for attributes based on how well they split the dataset.
+    
+    Args:
+        data: List of dictionaries with 'url' and various attributes that can be either
+              single categorical values or lists of categorical values
+    
+    Returns:
+        List of dictionaries containing attribute names and their importance scores (1-5)
+    """
+    def calculate_entropy(values: List[str]) -> float:
+        """Calculate entropy for a list of values."""
+        counts = Counter(values)
+        total = len(values)
+        entropy = 0
+        
+        for count in counts.values():
+            prob = count / total
+            entropy -= prob * math.log2(prob)
+            
+        return entropy
+    
+    def normalize_to_range(value: float, min_val: float, max_val: float) -> float:
+        """Normalize a value to a 1-5 range."""
+        if max_val == min_val:
+            return 3  # Return middle value if all attributes have same entropy
+        
+        normalized = 1 + ((value - min_val) / (max_val - min_val)) * 4
+        return round(normalized, 2)
+    
+    # Get all attributes except 'url'
+    attributes = [key for key in data[0].keys() if key != 'url']
+    
+    # Calculate entropy for each attribute
+    entropy_scores = {}
+    for attr in attributes:
+        # Flatten lists if attribute value is a list
+        all_values = []
+        for item in data:
+            value = item[attr]
+            if isinstance(value, list):
+                all_values.extend(value)
+            else:
+                all_values.append(value)
+        
+        entropy_scores[attr] = calculate_entropy(all_values)
+    
+    # Normalize entropy scores to 1-5 range
+    min_entropy = min(entropy_scores.values())
+    max_entropy = max(entropy_scores.values())
+    
+    # Create final result
+    result = [
+        {
+            'attribute': attr,
+            'importance': normalize_to_range(score, min_entropy, max_entropy)
+        }
+        for attr, score in entropy_scores.items()
+    ]
+    
+    # Sort by importance score in descending order
+    result.sort(key=lambda x: x['importance'], reverse=True)
+    
+    return result
