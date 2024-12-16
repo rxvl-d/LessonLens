@@ -2,21 +2,21 @@
   "subject": "physics",
   "tasks": [
   {
-  "feature_flags": ["summary", "metadata"],
-  "search_task": "Find comprehensive written analogies and physical models for teaching electric current flow that avoid common misconceptions. Look for materials that use tangible demonstrations with everyday objects, suitable for 7th/8th grade.",
-  "relevance_dimensions": [
-  "How effectively does the analogy avoid common electrical misconceptions?",
-  "What level of scaffolding is provided to help students transition from the analogy to the actual concept?",
-  "How well does the model account for both current and energy flow in circuits?"
-  ]
-  },
-  {
   "feature_flags": [],
   "search_task": "Find documentation, safety guidelines, and procedural guides about using multimeters in middle school classrooms. Focus on materials that include clear step-by-step instructions and troubleshooting guides.",
   "relevance_dimensions": [
   "What safety considerations are explicitly addressed?",
   "How are complex concepts broken down into manageable steps?",
   "What assessment methods are included to verify student competency?"
+  ]
+  },
+  {
+  "feature_flags": ["summary", "metadata"],
+  "search_task": "Find comprehensive written analogies and physical models for teaching electric current flow that avoid common misconceptions. Look for materials that use tangible demonstrations with everyday objects, suitable for 7th/8th grade.",
+  "relevance_dimensions": [
+  "How effectively does the analogy avoid common electrical misconceptions?",
+  "What level of scaffolding is provided to help students transition from the analogy to the actual concept?",
+  "How well does the model account for both current and energy flow in circuits?"
   ]
   },
   {
