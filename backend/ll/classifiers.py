@@ -193,7 +193,9 @@ def fetch_serp_based_summary(serp_data):
 def fetch_content_based_gpt_adaptive_snippet(content_dims):
   content, relevance_dimensions = content_dims
   prompt = f"""
-  Respond to the following questions given the following content. Respond in keywords and not full sentences.
+  Respond to the following questions given the following content. 
+  Respond in keywords and not full sentences.
+  Respond in english.
   
   Content:
   {content} 
