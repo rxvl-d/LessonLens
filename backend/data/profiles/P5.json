@@ -23,9 +23,8 @@
   "feature_flags": ["summary", "snippets"],
   "search_task": "Research technical specifications and documentation of common household devices and their voltage requirements. Look for materials that can be adapted into age-appropriate learning resources for 7th/8th grade.",
   "relevance_dimensions": [
-  "How well do the examples connect to students' everyday experiences?",
-  "What level of technical detail is appropriate for this age group?",
-  "How are safety considerations integrated into the learning materials?"
+  "Does it contain technical specifications of common household devices? Which?",
+  "Is the level of technical detail appropriate for a 7/8th grade age group?"
   ]
   },
   {
@@ -50,9 +49,9 @@
   "feature_flags": ["summary", "snippets"],
   "search_task": "Research different types of culminating physics projects that integrate multiple electricity concepts. Look for projects that allow for differentiation and real-world connections.",
   "relevance_dimensions": [
-  "How well does the project integrate theoretical and practical knowledge?",
-  "What opportunities exist for differentiation and student choice?",
-  "How are safety considerations addressed in the project guidelines?"
+  "Is the project appropriate for a 7/8th grade level?",
+  "What opportunities exist for differentiation and student choice in this resource?",
+  "Which electricity concepts are addressed in this resource?"
   ]
   }
   ]
