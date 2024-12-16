@@ -29,12 +29,16 @@ def handle_options_request():
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
     return response
 
+@api.route('/ping', methods=['GET'])
+def ping():
+  return jsonify({'status': 'ok'})
+
 @api.route('/summary', methods=['POST', 'OPTIONS'])
 def summary():
     if request.method == 'OPTIONS':
         return handle_options_request()
     elif request.method == 'POST':
-        response = summarizer.summarize_v3(request.json['task'], request.json['results'])
+        response = summarizer.summarize_v3_fast(request.json['task'], request.json['results'])
         try:
             response_str = json.dumps(response, indent=2)
             jresponse = Response(response_str, mimetype='application/json')
