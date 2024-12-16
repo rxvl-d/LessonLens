@@ -176,14 +176,19 @@ def content_based_gpt_metadata_inference(url, content):
   else:
     return None
 
-def get_gpt4_labels(prompt):
+def get_gpt4_labels(prompt, fast=False):
     response = client_openai.chat.completions.create(
-        model="gpt-4o-2024-08-06",
+        model="gpt-3.5-turbo-0125" if fast else "gpt-4o-2024-08-06",
         messages=[{"role": "user", "content": prompt}],
         temperature=0
     )
     response_text = response.choices[0].message.content
     return response_text
+
+def fetch_serp_based_summary(serp_data):
+  print(serp_data)
+  return None
+  
 
 def fetch_content_based_gpt_adaptive_snippet(content_dims):
   content, relevance_dimensions = content_dims
@@ -301,3 +306,9 @@ EDUCATIONAL_USES = [
         "examples": ["pre-class materials", "self-study resources", "preparatory content"]
     }
 ]
+
+LEARNING_RESOURCE_TYPES = ["exercise", "simulation", "questionnaire", "diagram", "figure", "graph", 
+                           "index", "slide", "table", "descriptive_text", "article", "exam", 
+                           "experiment", "hands on activity" "example", "equation", "worksheet", 
+                           "problem_statement", "assessment", "lecture", "case study", "definition", 
+                           "illustration", "demonstration", "simulation", "interactive activity", "video"]

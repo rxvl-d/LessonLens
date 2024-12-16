@@ -52,6 +52,49 @@ class Summarizer:
             log.error(f"Error in topic classification: {e}")
             return {"unknown": 100.0}
 
+    def summarize_v3(self, search_task, serp_data):
+        prompt = f"""
+        Given a list of URLs, titles and summaries, 
+        return the list of URLs tagged with various educational attributes.
+        Also rate the importance of attributes given a search task.
+
+        Search Task: {search_task}
+        Input: {serp_data}
+        Output should be in JSON in the form:
+        {{
+          "tagged_urls": [
+            {{
+              "url": "url1",
+              "is_commercial": true/false,
+              "is_educational": true/false, // not educational if it is news or sales
+              "source_institution": ["university", "school", "non-profit foundation", "private teacher", "private company"] // pick all that apply
+              "educational_level": ["Grundschule", "Sekundarstufe I", "Sekundarstufe II", "Higher Education"] // Pick the lowest applicable level
+              "subject": ["Physics", "Chemistry", "Maths"] // Pick one
+              "learning_resource_type": {LEARNING_RESOURCE_TYPES} // Pick all that apply
+            }},
+            {{"url": "url2",
+              "is_commercial": ...}},
+            ... 
+          ],
+          "attribute_importances": [
+            {{ 
+              "attribute": "is_commercial", 
+              "importance" : 1 // on a scale of 1-5
+            }},
+            {{ 
+              "attribute": "is_educational", 
+              "importance" : 1 // on a scale of 1-5
+            }},
+            ...
+          ]
+        }}
+        """
+        response = parse_json(get_gpt4_labels(prompt, fast=True))
+        if (type(response) == dict) and (set(response.keys()) == {'attribute_importances', 'tagged_urls'}):
+          return response
+        else:
+          return None
+
     def summarize_v2(self, serp_data):
         summary = []
         for r in serp_data:
