@@ -96,7 +96,7 @@ class Summarizer:
           return None
 
     def summarize_v4(self, query, search_task, serp_data):
-        query_type, summary = process_search_results(query, serp_data)
+        query_type, summary = process_search_results(query, search_task, serp_data)
         attr_importances = calculate_attribute_importance(summary)
         out = {'query_type': query_type, 'tagged_urls': summary, 'attribute_importances': attr_importances}
         return out
@@ -260,12 +260,12 @@ def calculate_attribute_importance(data: List[Dict[str, Union[str, List[str]]]])
     return result
 
     
-def classify_query_type(query: str) -> str:
+def classify_query_type(query: str, search_task: str) -> str:
     """Determines the learning resource type based on query keywords"""
     
     # Dictionary mapping resource types to their identifying keywords
     type_keywords = {
-        "worksheet": ["Arbeitsblatt", "Übungsblatt", "Aufgabenblatt"],
+        "worksheet": ["Arbeitsblatt", "Übungsblatt", "Aufgabenblatt", "Worksheet"],
         "experiment": ["Experiment", "Versuch", "Demonstration", "Laborversuch"],
         "teaching_method": ["Unterrichtsmethode", "didaktisch", "Methodik", "Lerntyp"],
         "assessment": ["Test", "Lernstandserhebung", "Diagnose", "Prüfung"],
@@ -276,7 +276,7 @@ def classify_query_type(query: str) -> str:
     # Count matches for each type
     type_matches = {
         type_name: sum(1 for keyword in keywords 
-                      if keyword.lower() in query.lower())
+                      if keyword.lower() in (query + search_task).lower())
         for type_name, keywords in type_keywords.items()
     }
     
@@ -313,10 +313,10 @@ def determine_source_type(url: str) -> str:
     # Default case
     return "other"
 
-def process_search_results(query: str, results: list) -> dict:
+def process_search_results(query: str, search_task: str, results: list) -> dict:
     """Main function to process search results based on query type"""
     
-    query_type = classify_query_type(query)
+    query_type = classify_query_type(query, search_task)
     
     # Dispatch to appropriate processor based on type
     processors = {
@@ -329,6 +329,7 @@ def process_search_results(query: str, results: list) -> dict:
     }
     
     processor = processors.get(query_type, extract_general_attributes)
+    processor = extract_general_attributes
     
     tagged_urls = [processor(result) for result in results]
     return query_type, tagged_urls
