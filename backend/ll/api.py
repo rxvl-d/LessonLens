@@ -38,7 +38,7 @@ def summary():
     if request.method == 'OPTIONS':
         return handle_options_request()
     elif request.method == 'POST':
-        response = summarizer.summarize_v3_fast(request.json['task'], request.json['results'])
+        response = summarizer.summarize_v4(request.json['query'], request.json['task'], request.json['results'])
         try:
             response_str = json.dumps(response, indent=2)
             jresponse = Response(response_str, mimetype='application/json')

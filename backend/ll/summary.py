@@ -95,6 +95,12 @@ class Summarizer:
         else:
           return None
 
+    def summarize_v4(self, query, search_task, serp_data):
+        query_type, summary = process_search_results(query, serp_data)
+        attr_importances = calculate_attribute_importance(summary)
+        out = {'query_type': query_type, 'tagged_urls': summary, 'attribute_importances': attr_importances}
+        return out
+
     def summarize_v3_fast(self, search_task, serp_data):
         summary = []
         for r in serp_data:
@@ -110,7 +116,8 @@ class Summarizer:
             summary_part['source_institution_type'] = source_classifier(url, title, description)
             summary.append(summary_part)
         attr_importances = calculate_attribute_importance(summary)
-        return {'tagged_urls': summary, 'attribute_importances': attr_importances}
+        out = {'tagged_urls': summary, 'attribute_importances': attr_importances}
+        return out
 
     def summarize_v2(self, serp_data):
         summary = []
@@ -251,3 +258,277 @@ def calculate_attribute_importance(data: List[Dict[str, Union[str, List[str]]]])
     result.sort(key=lambda x: x['importance'], reverse=True)
     
     return result
+
+    
+def classify_query_type(query: str) -> str:
+    """Determines the learning resource type based on query keywords"""
+    
+    # Dictionary mapping resource types to their identifying keywords
+    type_keywords = {
+        "worksheet": ["Arbeitsblatt", "Übungsblatt", "Aufgabenblatt"],
+        "experiment": ["Experiment", "Versuch", "Demonstration", "Laborversuch"],
+        "teaching_method": ["Unterrichtsmethode", "didaktisch", "Methodik", "Lerntyp"],
+        "assessment": ["Test", "Lernstandserhebung", "Diagnose", "Prüfung"],
+        "didactic_concept": ["didaktische Konzepte", "Analogie", "Modell", "Konzeption"],
+        "modeling_activity": ["Modellierung", "Aktivität", "Modell"]
+    }
+    
+    # Count matches for each type
+    type_matches = {
+        type_name: sum(1 for keyword in keywords 
+                      if keyword.lower() in query.lower())
+        for type_name, keywords in type_keywords.items()
+    }
+    
+    # Return type with most matches, defaulting to "general" if no matches
+    best_match = max(type_matches.items(), key=lambda x: x[1])
+    return best_match[0] if best_match[1] > 0 else "general"
+
+def determine_source_type(url: str) -> str:
+    """Determine the source type from URL patterns"""
+    url = url.lower()
+    
+    # University patterns
+    if any(pattern in url for pattern in [
+        '.edu', '.ac.', 'uni-', 'universitaet', 'universität', 
+        'hochschule', '.tu-', 'fh-'
+    ]):
+        return "university"
+        
+    # Publisher patterns
+    if any(pattern in url for pattern in [
+        'verlag', 'persen.de', 'cornelsen', 'klett',
+        'westermann', 'schulbuchzentrum', 'bildungsverlag'
+    ]):
+        return "publisher"
+        
+    # Educational portal patterns
+    if any(pattern in url for pattern in [
+        'leifiphysik', 'bildungsserver', 'schule', 
+        'lehrerfortbildung', 'bildung-', '-bildung',
+        'unterricht', 'lernportal', 'education'
+    ]):
+        return "educational_portal"
+    
+    # Default case
+    return "other"
+
+def process_search_results(query: str, results: list) -> dict:
+    """Main function to process search results based on query type"""
+    
+    query_type = classify_query_type(query)
+    
+    # Dispatch to appropriate processor based on type
+    processors = {
+        "worksheet": extract_worksheet_attributes,
+        "experiment": extract_experiment_attributes,
+        "teaching_method": extract_teaching_method_attributes,
+        "assessment": extract_assessment_attributes,
+        "didactic_concept": extract_didactic_concept_attributes,
+        "modeling_activity": extract_modeling_activity_attributes
+    }
+    
+    processor = processors.get(query_type, extract_general_attributes)
+    
+    tagged_urls = [processor(result) for result in results]
+    return query_type, tagged_urls
+
+def extract_experiment_attributes(result: dict) -> dict:
+    """Extract attributes specific to experiment resources"""
+    url = result.get("url", "")
+    title = result.get("title", "")
+    description = result.get("description", "")
+    
+    # Combined text for analysis
+    text = f"{title} {description}".lower()
+    
+    return {
+        "url": url,
+        "is_experiment": 'Is Experiment' if any(term in text for term in ["experiment", "versuch", "demonstration"]) else 'Not Experiment',
+        "contains_demonstration_terms": 'Is Demonstration' if any(term in text for term in ["demonstrieren", "demonstration", "vorführung"]) else 'Not Demonstration',
+        "contains_hands_on_terms": 'Is Hands-On' if any(term in text for term in ["selber machen", "durchführen", "selbst"]) else 'Not Hands-On',
+        "contains_equipment_mentions": extract_equipment_mentions(text),
+        "source_type": determine_source_type(url)
+    }
+
+
+def extract_worksheet_attributes(result: dict) -> dict:
+    """Extract attributes specific to worksheet resources"""
+    url = result.get("url", "")
+    title = result.get("title", "")
+    description = result.get("description", "")
+    text = f"{title} {description}".lower()
+    
+    return {
+        "url": url,
+        "is_worksheet": 'Is Worksheet' if any(term in text for term in ["arbeitsblatt", "übungsblatt", "aufgabenblatt"]) else 'Not Worksheet',
+        "has_step_instructions": 'Scaffolded' if any(term in text for term in ["schritt", "anleitung", "schrittweise"]) else 'Not Scaffolded',
+        "includes_solutions": 'Includes Solutions' if any(term in text for term in ["lösung", "musterlösung", "lösungsblatt"]) else 'No Solutions',
+    }
+
+def extract_teaching_method_attributes(result: dict) -> dict:
+    """Extract attributes specific to teaching method resources"""
+    url = result.get("url", "")
+    title = result.get("title", "")
+    description = result.get("description", "")
+    text = f"{title} {description}".lower()
+    
+    return {
+        "url": url,
+        "differentiation_level": "Is Differentiated" if any(term in text for term in ["vereinfachung", "grundlegend", "angepasst", "differenziert", "leistungsschwach", "förderung"]) else "Not Differentiated",
+        "includes_visual_aids": "Has Visual Aids" if any(term in text for term in ["visualisierung", "modell", "grafik"]) else "No Visual Aids",
+        "teaching_method_type": extract_teaching_methods(text),
+    }
+
+def extract_assessment_attributes(result: dict) -> dict:
+    """Extract attributes specific to assessment resources"""
+    url = result.get("url", "")
+    title = result.get("title", "")
+    description = result.get("description", "")
+    text = f"{title} {description}".lower()
+    
+    return {
+        "url": url,
+        "assessment_type": determine_assessment_type(text),
+        "scoring_guide_included": "Scoring Guide Included" if any(term in text for term in ["bewertung", "auswertung", "punkteverteilung"]) else "No Scoring Guide",
+        "question_types": extract_question_types(text),
+    }
+
+def extract_question_types(text: str) -> list:
+   """Extract types of questions/problems mentioned in the text"""
+   
+   question_types = []
+   
+   type_patterns = {
+       "multiple_choice": ["multiple choice", "mehrfachauswahl", "ankreuzaufgabe", "auswahlaufgabe"],
+       "open_ended": ["offene frage", "freitext", "essay", "aufsatz", "beschreibung"],
+       "calculation": ["berechnung", "rechenaufgabe", "berechne", "bestimme"],
+       "matching": ["zuordnung", "verbinde", "ordne zu", "matching"],
+       "fill_in": ["lückentext", "ergänze", "lückenfüllen", "vervollständige"],
+       "diagram": ["zeichne", "skizziere", "diagramm", "grafik"],
+       "true_false": ["richtig falsch", "wahr falsch", "ja nein", "stimmt nicht stimmt"]
+   }
+   
+   text = text.lower()
+   
+   for qtype, patterns in type_patterns.items():
+       if any(pattern in text for pattern in patterns):
+           question_types.append(qtype)
+           
+   return question_types if question_types else ["unspecified"]
+
+def extract_didactic_concept_attributes(result: dict) -> dict:
+    """Extract attributes specific to didactic concept resources"""
+    url = result.get("url", "")
+    title = result.get("title", "")
+    description = result.get("description", "")
+    text = f"{title} {description}".lower()
+    
+    return {
+        "url": url,
+        "includes_analogies": "Includes Analogies" if any(term in text for term in ["analogie", "vergleich", "modell"]) else "No Analogies",
+        "visualization_tools": "Includes Visualization Tools" if any(term in text for term in ["visualisierung", "darstellung", "veranschaulichung"]) else "No Visualization Tools",
+        "curriculum_alignment": "Mentions Curriculum Alignment" if any(term in text for term in ["lehrplan", "bildungsstandard", "curriculum"]) else "No Curriculum Alignment",
+    }
+
+def extract_modeling_activity_attributes(result: dict) -> dict:
+    """Extract attributes specific to modeling activity resources"""
+    url = result.get("url", "")
+    title = result.get("title", "")
+    description = result.get("description", "")
+    text = f"{title} {description}".lower()
+    
+    return {
+        "url": url,
+        "model_type": extract_model_types(text),
+        "materials_required": "Materials Required" if any(term in text for term in ["material", "benötigt", "ausstattung"]) else "No Materials Required",
+        "student_interaction_level": determine_interaction_level(text),
+    }
+
+def extract_teaching_methods(text: str) -> list:
+    methods = []
+    method_keywords = {
+        "gruppenarbeit": ["gruppe", "gruppenarbeit"],
+        "einzelarbeit": ["einzelarbeit", "individuell"],
+        "stationenlernen": ["station", "lernstation"],
+        "experiment": ["experiment", "versuch"]
+    }
+    for method, keywords in method_keywords.items():
+        if any(keyword in text for keyword in keywords):
+            methods.append(method)
+    return methods
+
+def determine_assessment_type(text: str) -> str:
+    if any(term in text for term in ["diagnose", "eingangstest"]):
+        return "diagnostic"
+    elif any(term in text for term in ["formativ", "zwischentest"]):
+        return "formative"
+    elif any(term in text for term in ["abschlusstest", "klausur"]):
+        return "summative"
+    return "unspecified"
+
+def determine_interaction_level(text: str) -> str:
+    if any(term in text for term in ["gruppe", "team", "partner"]):
+        return "group"
+    elif any(term in text for term in ["klasse", "plenum"]):
+        return "class"
+    else:
+        return "individual"
+
+def extract_model_types(text: str) -> list:
+    model_types = []
+    type_keywords = {
+        "physical": ["physisch", "haptisch"],
+        "digital": ["digital", "simulation"],
+        "conceptual": ["konzeptuell", "theoretisch"]
+    }
+    for model_type, keywords in type_keywords.items():
+        if any(keyword in text for keyword in keywords):
+            model_types.append(model_type)
+    return model_types
+
+def extract_general_attributes(result: dict) -> dict:
+    """Extract general attributes that apply to all educational resources"""
+    url = result.get("url", "")
+    title = result.get("title", "")
+    description = result.get("description", "")
+    
+    return {
+        'url': url,
+        'is_commercial': commercial_classifier(url, title, description),
+        'is_educational': page_classifier(url, title, description),
+        'source_institution': source_classifier(url, title, description),
+        'educational_level': ed_level_classifier(url, title, description),
+        'audience': audience_classifier(url, title, description),
+        'source_institution_type': source_classifier(url, title, description)
+    }
+
+def extract_equipment_mentions(text: str) -> list:
+    """Extract mentions of scientific equipment from text"""
+    
+    # Common lab/experiment equipment in German
+    equipment_terms = [
+        # Basic lab equipment
+        "reagenzglas", "becherglas", "erlenmeyerkolben", "messkolben", "pipette", 
+        "bunsenbrenner", "stativ", "waage", "thermometer",
+        
+        # Electrical/physics equipment
+        "batterie", "kabel", "stromquelle", "magnet", "kompass",
+        "voltmeter", "amperemeter", "elektroskop", "elektrometer",
+        "kondensator", "spule", "widerstand", "schalter",
+        
+        # Common household items often used in experiments
+        "luftballon", "kerze", "spiegel", "linse", "glas",
+        "plastikflasche", "alufolie", "papier", "gummiband",
+        
+        # Materials
+        "kupferdraht", "eisendraht", "metallplatte", "glasstab", "kunststoffstab"
+    ]
+    
+    # Find all equipment mentions in the text
+    found_equipment = []
+    for term in equipment_terms:
+        if term in text.lower():
+            found_equipment.append(term)
+            
+    return found_equipment
