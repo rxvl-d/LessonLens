@@ -498,7 +498,6 @@ def extract_general_attributes(result: dict) -> dict:
         'url': url,
         'is_commercial': commercial_classifier(url, title, description),
         'is_educational': page_classifier(url, title, description),
-        'source_institution': source_classifier(url, title, description),
         'educational_level': ed_level_classifier(url, title, description),
         'audience': audience_classifier(url, title, description),
         'source_institution_type': source_classifier(url, title, description)

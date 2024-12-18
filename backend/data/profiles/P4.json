@@ -1,39 +1,39 @@
 {
-	"subject": "math",
-	"tasks": [
-		{
-			"feature_flags": [],
-			"search_task": "Find ready-to-use materials explaining the transition from Pythagorean theorem to cosine law, including specific examples showing how the cosine law generalizes Pythagoras for non-right triangles."
-		},
-		{
-			"feature_flags": ["summary", "metadata"],
-			"search_task": "Find worksheets that provide visual proofs of the Pythagorean theorem suitable for grade 9/10, focusing on proofs that use area comparison and geometric transformations, including historical context and step-by-step explanations."
-		},
-		{
-			"feature_flags": ["summary", "snippets"],
-			"search_task": "Investigate creative approaches to introducing trigonometric ratios that: <ul><li>Use real-world examples from architecture or engineering</li><li>Incorporate hands-on measurement activities</li><li>Connect to students' prior knowledge of similar triangles</li><li>Include differentiated learning paths</li><li>Can be completed within 2-3 lessons</li></ul>",
-			"relevance_dimensions": [
-				"How does it build on similarity concepts?",
-				"What kinds of practical activities does it include?",
-				"How does it support different learning speeds?"
-			]
-		},
-		{
-			"feature_flags": [],
-			"search_task": "Research outdoor mathematics activities that: <ul><li>Apply similarity theorems to real measurements</li><li>Use shadows and indirect measurement</li><li>Include precise instructions for implementation</li><li>Consider safety and practical constraints</li><li>Provide backup indoor alternatives</li></ul>"
-		},
-		{
-			"feature_flags": ["summary", "metadata"],
-			"search_task": "Find practice problems and worked examples demonstrating the combined application of sine law and cosine law in complex triangles, suitable for grade 9/10 students preparing for final assessment."
-		},
-		{
-			"feature_flags": ["summary", "snippets"],
-			"search_task": "Explore project ideas that: <ul><li>Integrate multiple concepts from the unit (similarity, Pythagoras, trigonometry)</li><li>Can be completed in groups over 2-3 lessons</li><li>Include clear assessment criteria</li><li>Allow for creative presentation formats</li><li>Connect to real-world applications</li><li>Support different ability levels</li></ul>",
-			"relevance_dimensions": [
-				"How many core concepts does it integrate?",
-				"What presentation formats does it support?",
-				"How does it allow for differentiation?"
-			]
-		}
-	]
+        "subject": "Mathematik",
+        "tasks": [
+                {
+                        "feature_flags": [],
+                        "search_task": "Finde gebrauchsfertige Materialien, die den Übergang vom Satz des Pythagoras zum Kosinussatz erklären, einschließlich spezifischer Beispiele, die zeigen, wie der Kosinussatz den Satz des Pythagoras für nicht-rechtwinklige Dreiecke verallgemeinert."
+                },
+                {
+                        "feature_flags": ["summary", "metadata"],
+                        "search_task": "Finde Arbeitsblätter mit visuellen Beweisen des Satzes des Pythagoras, geeignet für Klasse 9/10, mit Fokus auf Beweise, die Flächenvergleiche und geometrische Transformationen nutzen, einschließlich historischem Kontext und schrittweisen Erklärungen."
+                },
+                {
+                        "feature_flags": ["summary", "snippets"],
+                        "search_task": "Untersuche kreative Ansätze zur Einführung trigonometrischer Verhältnisse, die: <ul><li>Reale Beispiele aus Architektur oder Ingenieurwesen verwenden</li><li>Praktische Messaktivitäten einbeziehen</li><li>An das Vorwissen der Schüler über ähnliche Dreiecke anknüpfen</li><li>Innerhalb von 2-3 Unterrichtsstunden abgeschlossen werden können</li></ul>",
+                        "relevance_dimensions": [
+                                "Welche mathematischen Konzepte werden erwähnt?",
+                                "Welche Arten von praktischen Aktivitäten sind enthalten?"
+                        ]
+                },
+                {
+                        "feature_flags": [],
+                        "search_task": "Recherchiere mathematische Aktivitäten im Freien, die: <ul><li>Ähnlichkeitssätze auf reale Messungen anwenden</li><li>Schatten und indirekte Messungen nutzen</li><li>Präzise Durchführungsanweisungen enthalten</li><li>Sicherheits- und praktische Einschränkungen berücksichtigen</li><li>Alternative Aktivitäten für drinnen bereitstellen</li></ul>"
+                },
+                {
+                        "feature_flags": ["summary", "metadata"],
+                        "search_task": "Finde Übungsaufgaben und durchgerechnete Beispiele, die die kombinierte Anwendung von Sinussatz und Kosinussatz in komplexen Dreiecken demonstrieren, geeignet für Schüler der Klassen 9/10 in der Prüfungsvorbereitung."
+                },
+                {
+                        "feature_flags": ["summary", "snippets"],
+                        "search_task": "Erkunde Projektideen, die: <ul><li>Mehrere Konzepte aus der Einheit integrieren (Ähnlichkeit, Pythagoras, Trigonometrie)</li><li>In Gruppen über 2-3 Unterrichtsstunden bearbeitet werden können</li><li>Klare Bewertungskriterien enthalten</li><li>Kreative Präsentationsformate ermöglichen</li><li>Verbindungen zu realen Anwendungen herstellen</li><li>Verschiedene Leistungsniveaus unterstützen</li></ul>",
+                        "relevance_dimensions": [
+                                "Welche mathematischen Konzepte werden behandelt?",
+                                "Welche realen Anwendungen werden erwähnt?",
+                                "Welche Arten von Bewertungen sind enthalten?",
+                                "Welche Arten von Projektarbeit sind enthalten?"
+                        ]
+                }
+        ]
 }
