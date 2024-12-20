@@ -195,7 +195,7 @@ def fetch_content_based_gpt_adaptive_snippet(content_dims):
   prompt = f"""
   Respond to the following questions given the following content. 
   Respond in keywords and not full sentences.
-  Respond in english.
+  Respond in same language as the question.
   
   Content:
   {content} 
