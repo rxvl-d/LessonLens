@@ -1,0 +1,26 @@
+{
+  "extends": [],
+  "defaultSeverity": "warning", 
+  "rules": {
+    "semicolon": [true, "always"],
+    "space-before-function-paren": [true, "always"],
+    "no-trailing-whitespace": true,
+    "typedef-whitespace": [
+      true,
+      {
+        "call-signature": "nospace",
+        "index-signature": "nospace",
+        "parameter": "nospace",
+        "property-declaration": "nospace",
+        "variable-declaration": "nospace"
+      }
+    ]
+  },
+  "linterOptions": {
+    "exclude": [
+      "config/**/*.js",
+      "node_modules/**/*.ts",
+      "coverage/lcov-report/*.js"
+    ]
+  }
+}

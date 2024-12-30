@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "typeRoots": ["node_modules/@types", "node_modules/web-ext-types"],
+    "jsx": "react",
+    "module": "CommonJS",
+    "noImplicitAny": false,
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "sourceMap": false,
+    "types": ["node", "firefox-webext-browser", "chrome", "react-redux"],
+    "strictNullChecks": false,
+  },
+  "include": [
+    "src"
+  ]
+}
