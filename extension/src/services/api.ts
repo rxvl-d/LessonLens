@@ -2,14 +2,13 @@ import { EnhancedSnippet, EnhancedSnippetResult, MetadataResult, SearchResult, S
 import { StudySettings } from '../types/study';
 
 export class APIService {
-  public static async getSummary(query: string, task: string, results: SearchResult[]): Promise<SummaryV4> {
+  public static async getSummary(query: string, results: SearchResult[]): Promise<SummaryV4> {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
         { 
           type: 'fetchSummary', 
           query,
           results,
-          task
         },
         response => {
           if (response && response.success) {
@@ -37,10 +36,10 @@ export class APIService {
     });
   }
 
-  public static async getEnhancedSnippets(results: SearchResult[], relevance_dimensions: string[]): Promise<EnhancedSnippetResult[]> {
+  public static async getEnhancedSnippets(results: SearchResult[], query: string): Promise<EnhancedSnippetResult[]> {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
-        { type: 'fetchEnhancedSnippets', results, relevance_dimensions},
+        { type: 'fetchEnhancedSnippets', results, query},
         (response) => {
           if (response.success) {
             resolve(response.data);

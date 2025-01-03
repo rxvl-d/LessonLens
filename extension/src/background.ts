@@ -96,7 +96,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ results: request.results, task: request.task, query: request.query })
+      body: JSON.stringify({ results: request.results, query: request.query })
     })
     .then(response => response.json())
     .then(data => {
@@ -138,7 +138,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ results: request.results, relevance_dimensions: request.relevance_dimensions})
+      body: JSON.stringify({ results: request.results, query: request.query})
     })
     .then(response => response.json())
     .then(data => {

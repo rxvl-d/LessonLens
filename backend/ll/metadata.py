@@ -61,7 +61,7 @@ class MetadataEnricher:
             # Submit all tasks
             future_to_url = {
                 executor.submit(process_single_result, result): result['url']
-                for result in serp_data
+                for result in serp_data[:2]
             }
             
             # Collect results as they complete

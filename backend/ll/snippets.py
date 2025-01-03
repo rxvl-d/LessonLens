@@ -1,24 +1,16 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict
 import logging
-from ll.classifiers import content_based_adaptive_snippet
+from ll.classifiers import content_based_adaptive_snippet, QuestionGenerator, RelevanceMatcher, classify_query_type
 
 class SnippetEnhancer:
     def __init__(self, web_page_cache):
+        self.relevance_matcher = RelevanceMatcher()
+        self.question_generator = QuestionGenerator()
         self.web_page_cache = web_page_cache
         
 
-    def enhance(self, serp_data: List[Dict], relevance_dimensions: List[str]) -> List[Dict]:
-        """
-        Enhance search results by fetching and processing web pages in parallel.
-        
-        Args:
-            serp_data: List of search result dictionaries containing url, title, and description
-            relevance_dimensions: List of dimensions to consider for snippet generation
-            
-        Returns:
-            List of enhanced snippets with additional context
-        """
+    def enhance(self, serp_data: List[Dict], query: str) -> List[Dict]:
         def process_single_result(result: Dict) -> Dict:
             """Process a single search result and generate enhanced snippet."""
             summary_part = {
@@ -34,7 +26,11 @@ class SnippetEnhancer:
                 else:
                     content = f"Title: {title}\nDescription: {description}"
                     
-                snippet = content_based_adaptive_snippet(url, content, relevance_dimensions)
+                typed_terms = classify_query_type(query)
+                dimensions = self.relevance_matcher.get_top_dimensions(typed_terms)
+                questions = self.question_generator.\
+                    generate_questions(typed_terms, [d[0] for d in dimensions])
+                snippet = content_based_adaptive_snippet(url, content, questions)
                 if snippet:
                     summary_part['enhanced_snippet'] = \
                       "<br/> ".join([qna(s) for s in snippet]) if type(snippet) == list else snippet
@@ -52,7 +48,7 @@ class SnippetEnhancer:
             # Submit all tasks
             future_to_url = {
                 executor.submit(process_single_result, result): result['url']
-                for result in serp_data
+                for result in serp_data[:2]
             }
             
             # Collect results as they complete

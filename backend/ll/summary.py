@@ -59,18 +59,7 @@ class Summarizer:
         return out
 
 def calculate_attribute_importance(data):
-    """
-    Calculate importance scores for attributes based on how well they split the dataset.
-    
-    Args:
-        data: List of dictionaries with 'url' and various attributes that can be either
-              single categorical values or lists of categorical values
-    
-    Returns:
-        List of dictionaries containing attribute names and their importance scores (1-5)
-    """
-    def calculate_entropy(values: List[str]) -> float:
-        """Calculate entropy for a list of values."""
+    def calculate_entropy(values):
         counts = Counter(values)
         total = len(values)
         entropy = 0

@@ -16,23 +16,14 @@ log = logging.getLogger("cache")
 logging.getLogger("trafilatura").setLevel(logging.FATAL)
 logging.getLogger("urllib3").setLevel(logging.FATAL)
 
-def hash(url):
-    return hashlib.md5(str(url).encode()).hexdigest()
+def hash(key):
+    return hashlib.md5(str(key).encode()).hexdigest()
     
 
 class WebPageCache:
-    def __init__(self, cache_dir: str = 'data/webpage_cache', 
-                 request_timeout: int = 30,
+    def __init__(self,request_timeout: int = 30,
                  head_timeout: int = 10):
-        """
-        Initialize WebPageCache with configurable timeouts and cache directory.
-        
-        Args:
-            cache_dir: Base directory for cached files
-            request_timeout: Timeout for content download requests in seconds
-            head_timeout: Timeout for HEAD requests in seconds
-        """
-        self.cache_path = Path(cache_dir)
+        self.cache_path = Path(os.getenv("HOME")) / '.cache' / 'LessonLens' / 'web_page_cache' 
         self.cache_path.mkdir(exist_ok=True, parents=True)
         self.request_timeout = request_timeout
         self.head_timeout = head_timeout
@@ -44,7 +35,7 @@ class WebPageCache:
         
     def _url_to_path(self, url: str) -> Path:
         """Generate a unique path for a URL using SHA-256 hashing."""
-        hashed = hashlib.sha256(url.encode()).hexdigest()
+        hashed = hash(url)
         path = self.cache_path / hashed
         path.mkdir(exist_ok=True)
         return path
@@ -160,24 +151,29 @@ class WebPageCache:
             'text': self._read_if_exists(text_path)
         }
 
+    def fetch_text(self, url: str) -> Optional[str]:
+        return self.fetch(url)['text']
+
 class URLLevelCache:
     def __init__(self):
         self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens' / 'url_cache'
-        self.cache_dir.mkdir(exist_ok=True)
+        self.cache_dir.mkdir(exist_ok=True, parents=True)
+    
+    def _cache_path(self, key):
+        return f'{self.cache_dir / hash(key)}.json' 
 
     def _get(self, key):
-        path = self.cache_dir / hash(key) + '.json' 
-        with open(path, 'r') as f:
+        with open(self._cache_path(key), 'r') as f:
             out = json.load(f)
         return out
 
     def _set(self, key, response):
-        with open(self.cache_dir / hash(key) + '.json', 'w') as f:
+        with open(self._cache_path(key), 'w') as f:
             json.dump(response, f)
 
     def get_or_fetch(self, key, input, fetch_fn):
-        if os.path.exists(self.cache_dir / hash(key) + '.json'):
-            self._get(key)
+        if os.path.exists(self._cache_path(key)):
+            return self._get(key)
         else:
             response = fetch_fn(input)
             self._set(key, response)

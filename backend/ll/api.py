@@ -58,7 +58,7 @@ def enhanced_snippets():
     if request.method == 'OPTIONS':
         return handle_options_request()
     elif request.method == 'POST':
-        response = snippets.enhance(request.json['results'], request.json['relevance_dimensions'])
+        response = snippets.enhance(request.json['results'], request.json['query'])
         response = jsonify(response)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response

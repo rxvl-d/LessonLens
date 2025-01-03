@@ -163,7 +163,6 @@ async function processResults (studySettings: StudySettings, currentTask: number
   const query = extractQuery();
   const flags = studySettings.tasks[currentTask].feature_flags;
   const relevance_dimensions = studySettings.tasks[currentTask].relevance_dimensions;
-  const task = studySettings.tasks[currentTask].search_task;
   const showSnippets = flags.includes('snippets');
   const showMetadata = flags.includes('metadata');
   const showSummary = flags.includes('summary');
@@ -171,15 +170,13 @@ async function processResults (studySettings: StudySettings, currentTask: number
   if (showSummary) {
 
     try {
-      const summary = await APIService.getSummary(query, task, non_null_results);
-      // Create overlay root if it doesn't exist
+      const summary = await APIService.getSummary(query, non_null_results);
       if (!overlayRoot) {
         overlayRoot = document.createElement('div');
         overlayRoot.id = 'lessonlens-results-overlay';
         document.body.appendChild(overlayRoot);
       }
 
-      // Render SearchResultsOverlay
       ReactDOM.render(
         <SearchResultsOverlay summary={summary} onClose={() => {
           if (overlayRoot && overlayRoot.parentNode) {
@@ -194,7 +191,6 @@ async function processResults (studySettings: StudySettings, currentTask: number
 
   }
 
-  // Fetch metadata for all results at once
   if (showMetadata) {
     try {
       const metadata = await APIService.getMetadata(non_null_results);
@@ -210,7 +206,7 @@ async function processResults (studySettings: StudySettings, currentTask: number
   }
   if (showSnippets) {
     try {
-      const enhancedSnippets = await APIService.getEnhancedSnippets(non_null_results, relevance_dimensions);
+      const enhancedSnippets = await APIService.getEnhancedSnippets(non_null_results, query);
       results.forEach(([r, searchResult]) => {
         const resultMetadata = enhancedSnippets.find(
           (m: EnhancedSnippetResult) => m.url === searchResult?.url

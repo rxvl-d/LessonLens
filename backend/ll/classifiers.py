@@ -185,11 +185,7 @@ def fetch_content_based_gpt_metadata_inference(content):
         return None
 
 def content_based_gpt_metadata_inference(url, content):
-  response_text = url_cache.get_or_fetch(url, content, fetch_content_based_gpt_metadata_inference)
-  if response_text:
-    return parse_json(response_text)
-  else:
-    return None
+  return url_cache.get_or_fetch(url, content, fetch_content_based_gpt_metadata_inference)
 
 
 # Task Snippet
@@ -270,13 +266,9 @@ def fetch_content_queries_based_gpt_adaptive_snippet(content_queries):
     return None
 
 def content_based_adaptive_snippet(url, content, questions):
-  response_text = url_cache.get_or_fetch((url,tuple(questions)), 
-                                        (content,questions), 
-                                        fetch_content_question_based_gpt_adaptive_snippet)
-  if response_text:
-    return parse_json(response_text)
-  else:
-    return None
+  return url_cache.get_or_fetch((url, content, questions), 
+                                (content,questions), 
+                                fetch_content_question_based_gpt_adaptive_snippet)
 
 EDUCATIONAL_USES = [
     {

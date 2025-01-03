@@ -27,7 +27,7 @@ const SearchResultsOverlay: React.FC<Props> = ({ summary, onClose }) => {
   return (
     <div className={`lessonlens_overlay ${isMinimized ? 'minimized' : ''}`}>
       <div className="overlay-header">
-        <h3>Summary of {toTitleCase(summary.query_type)}s</h3>
+        <h3>Summary of Search Results</h3>
         <div className="button-group">
           <button onClick={() => setShowRawData(!showRawData)}>
             {showRawData ? 'Show Charts' : 'Show Raw Data'}
