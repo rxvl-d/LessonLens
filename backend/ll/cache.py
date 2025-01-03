@@ -1,233 +1,184 @@
-import json
-import pickle
-from pathlib import Path
-import os
 import hashlib
-from PIL import Image
-import trafilatura
+import json
 import logging
+import mimetypes
+import os
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import pypdf
+import requests
+import trafilatura
+from docx import Document
+from PIL import Image
 
 log = logging.getLogger("cache")
 logging.getLogger("trafilatura").setLevel(logging.FATAL)
 logging.getLogger("urllib3").setLevel(logging.FATAL)
 
 def hash(url):
-    return hashlib.md5(url.encode()).hexdigest()
+    return hashlib.md5(str(url).encode()).hexdigest()
     
 
 class WebPageCache:
-
-    def __init__(self):
-        self.cache_path = Path('data') /  'webpage_cache'
+    def __init__(self, cache_dir: str = 'data/webpage_cache', 
+                 request_timeout: int = 30,
+                 head_timeout: int = 10):
+        """
+        Initialize WebPageCache with configurable timeouts and cache directory.
+        
+        Args:
+            cache_dir: Base directory for cached files
+            request_timeout: Timeout for content download requests in seconds
+            head_timeout: Timeout for HEAD requests in seconds
+        """
+        self.cache_path = Path(cache_dir)
         self.cache_path.mkdir(exist_ok=True, parents=True)
+        self.request_timeout = request_timeout
+        self.head_timeout = head_timeout
         self.hit = 0
         self.miss = 0
-    
-    def _read_if_exists(self, path, read_as_image=False):
-        if os.path.exists(path):    
-            if read_as_image:
-                return Image.open(path)
-            else:   
-                with open(path, 'r') as f:
-                    return f.read()
-        else:
-            return None
-
-    def _url_path(self, url):
-        hashed = hash(url)
+        
+        # Configure logging
+        self.logger = logging.getLogger(__name__)
+        
+    def _url_to_path(self, url: str) -> Path:
+        """Generate a unique path for a URL using SHA-256 hashing."""
+        hashed = hashlib.sha256(url.encode()).hexdigest()
         path = self.cache_path / hashed
         path.mkdir(exist_ok=True)
         return path
-
-    def _html_path(self, url):
-        return self._url_path(url) / 'index.html'
-
-    def _text_path(self, url):
-        return self._url_path(url) / 'playwright.txt'
-    
-    def _screenshot_path(self, url):
-        return self._url_path(url) / 'screenshot.png'
-
-    def fetch(self, url):
-        return {
-            'html': self._read_if_exists(self._html_path(url)),
-            'text': self._read_if_exists(self._text_path(url)),
-            'screenshot': self._read_if_exists(self._screenshot_path(url), read_as_image=True),
-        }
-
-    def fetch_html(self, url):
-        html_path = self._html_path(url)
-        if not os.path.exists(html_path):
-            # return None
-            html =trafilatura.fetch_url(url) or ""
-            with open(html_path, 'w') as f:
-                f.write(html)
-        with open(html_path, 'r') as f:
-            return f.read()
-
-    def fetch_text(self, url):
-        # html_path = self._html_path(url)
-        text_path = self._text_path(url)
-        # if not os.path.exists(html_path):
-        #     self.fetch_html(url)
-        #     # log.warning(f"HTML not found for {url}")
-        #     return None
-        # elif not os.path.exists(text_path):
-        if not os.path.exists(text_path):
-            self.miss += 1
+        
+    def _get_content_type(self, url: str) -> Optional[str]:
+        """Determine content type using HEAD request."""
+        try:
+            head_response = requests.head(url, timeout=self.head_timeout)
+            return head_response.headers.get('content-type', '').split(';')[0]
+        except requests.RequestException as e:
+            self.logger.error(f"HEAD request failed for {url}: {e}")
             return None
-            # text=trafilatura.extract(self.fetch_html(url)) or ""
-            # with open(text_path, 'w') as f:
-            #     f.write(text)
-        self.hit += 1
-        if (self.hit + self.miss) % 10 == 0:
-            log.info(f"Web Page HIT Rate: {self.hit / (self.hit+self.miss)}")
-        with open(text_path, 'r') as f:
-            return f.read()
             
-
-    def cache(self, url):
-        html = self.fetch_html(url)
-        text = self.fetch_text(url)
-        return {'html': html, 'text': text}
+    def _get_file_extension(self, content_type: str) -> str:
+        """Map content type to file extension."""
+        content_type_map = {
+            'text/html': 'html',
+            'application/pdf': 'pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx'
+        }
+        return content_type_map.get(content_type, 'html')
+        
+    def _read_if_exists(self, path: Path, read_as_image: bool = False) -> Optional[Any]:
+        """Read file if it exists, with support for different file types."""
+        if not path.exists():
+            return None
+            
+        try:
+            if read_as_image:
+                return Image.open(path)
+            elif path.suffix == '.pdf':
+                with open(path, 'rb') as f:
+                    reader = pypdf.PdfReader(f)
+                    return ' '.join(page.extract_text() for page in reader.pages)
+            elif path.suffix == '.docx':
+                doc = Document(path)
+                return ' '.join(paragraph.text for paragraph in doc.paragraphs)
+            else:
+                return path.read_text(encoding='utf-8')
+        except Exception as e:
+            self.logger.error(f"Error reading {path}: {e}")
+            return None
+            
+    def _download_file(self, url: str, content_type: str) -> Optional[str]:
+        """Download file from URL and save with appropriate extension."""
+        try:
+            response = requests.get(url, timeout=self.request_timeout)
+            response.raise_for_status()
+            
+            ext = self._get_file_extension(content_type)
+            path = self._url_to_path(url) / f'content.{ext}'
+            
+            # Write binary content for PDFs and DOCXs
+            if ext in ['pdf', 'docx']:
+                path.write_bytes(response.content)
+            else:
+                path.write_text(response.text, encoding='utf-8')
+                
+            return str(path)
+        except requests.RequestException as e:
+            self.logger.error(f"Failed to download {url}: {e}")
+            return None
+            
+    def _extract_text(self, path: Path, content_type: str) -> Optional[str]:
+        """Extract text content based on file type."""
+        try:
+            if content_type == 'text/html':
+                html_content = path.read_text(encoding='utf-8')
+                return trafilatura.extract(html_content) or ""
+            else:
+                return self._read_if_exists(path)
+        except Exception as e:
+            self.logger.error(f"Error extracting text from {path}: {e}")
+            return None
+            
+    def fetch(self, url: str) -> Dict[str, Optional[str]]:
+        """
+        Fetch content from URL or cache, handling different file types.
+        
+        Returns:
+            Dictionary containing original content and extracted text
+        """
+        content_type = self._get_content_type(url)
+        if not content_type:
+            return {'content': None, 'text': None}
+            
+        url_path = self._url_to_path(url)
+        ext = self._get_file_extension(content_type)
+        content_path = url_path / f'content.{ext}'
+        text_path = url_path / 'extracted_text.txt'
+        
+        # Check if content exists in cache
+        if not content_path.exists():
+            self.miss += 1
+            content_file = self._download_file(url, content_type)
+            if not content_file:
+                return {'content': None, 'text': None}
+        else:
+            self.hit += 1
+            
+        # Log cache hit rate every 10 requests
+        if (self.hit + self.miss) % 10 == 0:
+            self.logger.info(f"Cache hit rate: {self.hit / (self.hit + self.miss):.2%}")
+            
+        # Extract and cache text if needed
+        if not text_path.exists():
+            text_content = self._extract_text(content_path, content_type)
+            if text_content:
+                text_path.write_text(text_content, encoding='utf-8')
+                
+        return {
+            'content': self._read_if_exists(content_path),
+            'text': self._read_if_exists(text_path)
+        }
 
 class URLLevelCache:
     def __init__(self):
-        self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens'
+        self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens' / 'url_cache'
         self.cache_dir.mkdir(exist_ok=True)
-        self.cache_path = self.cache_dir / 'url_cache.pkl'
-        self.cache = self._load_cache()
-        self.hit = 0
-        self.miss = 0
 
-    def _load_cache(self):
-        if self.cache_path.exists():
-            with open(self.cache_path, 'rb') as f:
-                self.cache = pickle.load(f)
-        else:
-            self.cache = {}
-            self._save_cache()
-
-    def _save_cache(self):
-        with open(self.cache_path, 'wb') as f:
-            pickle.dump(self.cache, f)
-
-    def get(self, key):
-        self._load_cache()
-        out = self.cache.get(key)
-        if out:
-            self.hit += 1
-        else:
-            self.miss += 1
-        if (self.hit + self.miss) % 10 == 0:
-            log.info(f"URL HIT Rate: {self.hit / (self.hit + self.miss)}")
+    def _get(self, key):
+        path = self.cache_dir / hash(key) + '.json' 
+        with open(path, 'r') as f:
+            out = json.load(f)
         return out
 
-    def set(self, key, response):
-        self.cache[key] = response
-        self._save_cache()
+    def _set(self, key, response):
+        with open(self.cache_dir / hash(key) + '.json', 'w') as f:
+            json.dump(response, f)
 
     def get_or_fetch(self, key, input, fetch_fn):
-        response = self.get(key)
-        if response is None:
-            log.debug(f"Cache miss for key: {key}...")
+        if os.path.exists(self.cache_dir / hash(key) + '.json'):
+            self._get(key)
+        else:
             response = fetch_fn(input)
-            self.set(key, response)
-        else:
-            log.debug(f"Cache hit for key: {key}")
-        return response
-
-class PromptLevelCache:
-    def __init__(self):
-        self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens'
-        self.cache_dir.mkdir(exist_ok=True)
-        self.cache_path = self.cache_dir / 'gpt_cache.pkl'
-        self.cache = self._load_cache()
-
-    def _load_cache(self):
-        if self.cache_path.exists():
-            with open(self.cache_path, 'rb') as f:
-                self.cache = pickle.load(f)
-        else:
-            self.cache = {}
-            self._save_cache()
-
-    def _save_cache(self):
-        with open(self.cache_path, 'wb') as f:
-            pickle.dump(self.cache, f)
-
-    def get(self, prompt):
-        self._load_cache()
-        return self.cache.get(prompt)
-
-    def set(self, prompt, response):
-        self.cache[prompt] = response
-        self._save_cache()
-
-    def get_or_fetch(self, prompt, fetch_fn):
-        response = self.get(prompt)
-        if response is None:
-            log.debug(f"Cache miss for prompt: {prompt[:100]}...")
-            response = fetch_fn(prompt)
-            self.set(prompt, response)
-        else:
-            log.debug(f"Cache hit for prompt: {prompt}")
-        return response
-
-class URLContentLevelCache:
-    def __init__(self, label):
-       self.label = label 
-       self.cache_dir = Path(os.getenv("HOME")) / '.cache' / 'LessonLens' / label
-       self.cache_dir.mkdir(exist_ok=True, parents=True)
-
-    def _path(self, url, content_type, facet=None):
-        to_hash = url+':'+content_type if facet is None else url+':'+content_type+':'+facet
-        return self.cache_dir / hash(to_hash)
-
-    def _load_cache(self, url, content_type, facet=None):
-        path = self._path(url, content_type, facet)
-        if path.exists():
-            with open(path, 'r') as f:
-                is_empty = f.read().strip() == ''
-            if not is_empty:
-                with open(path, 'r') as f:
-                    return json.load(f)
-            else:
-                return None
-        else:
-            return None
-
-    def _save_cache(self, url, content_type, data, facet=None):
-        path = self._path(url, content_type, facet)
-        with open(path, 'w') as f:
-            json.dump(data, f)
-    
-    def get_or_fetch_batch(self, batch, fetch_fn):
-        to_fetch = list()
-        from_cache = list()
-        for url_data in batch:
-            url = url_data['url']
-            content_type = url_data['content_type']
-            facet = url_data.get('facet')
-            truncated_facet = facet[:100] if facet is not None else None
-            cached = self._load_cache(url, content_type, facet)
-            if cached is not None:
-                from_cache.append(cached)
-                log.debug(f"Cache hit for {url} {content_type} {truncated_facet} {self.label}")
-            else:
-                log.debug(f"Cache miss for {url} {content_type} {truncated_facet} {self.label}")
-                to_fetch.append(url_data)
-        if len(to_fetch) == 0:
-            return from_cache
-        classified = fetch_fn(to_fetch)
-        def find_content_type_and_facet(url):
-            for url_data in to_fetch:
-                if url_data['url'] == url:
-                    return url_data['content_type'], url_data.get('facet')
-        for url_data in classified:
-            url = url_data['url']
-            content_type, facet = find_content_type_and_facet(url)
-            assert content_type is not None
-            url_data['content_type'] = content_type
-            self._save_cache(url, content_type, url_data, facet)
-        return from_cache + classified 
+            self._set(key, response)
+            return response

@@ -6,16 +6,12 @@ from ll.summary import Summarizer
 from ll.metadata import MetadataEnricher
 from ll.snippets import SnippetEnhancer
 from ll.cache import WebPageCache
-from ll.claude import EducationalLevel, Subject, ResourceType, Snippets
 import logging
 
 log = logging.getLogger(__name__)
 api = Blueprint('api', __name__)
 pages = WebPageCache()
-educational_levels = EducationalLevel()
-subjects = Subject()
-resource_types = ResourceType()
-summarizer = Summarizer(educational_levels, resource_types)
+summarizer = Summarizer()
 metadata = MetadataEnricher(pages)
 snippets = SnippetEnhancer(pages)
 
@@ -38,7 +34,7 @@ def summary():
     if request.method == 'OPTIONS':
         return handle_options_request()
     elif request.method == 'POST':
-        response = summarizer.summarize_v4(request.json['query'], request.json['task'], request.json['results'])
+        response = summarizer.summarize_v4(request.json['query'], request.json['results'])
         try:
             response_str = json.dumps(response, indent=2)
             jresponse = Response(response_str, mimetype='application/json')
@@ -67,60 +63,6 @@ def enhanced_snippets():
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 
-@api.route('/metadata_v1', methods=['POST', 'OPTIONS'])
-def metadata_v1():
-    if request.method == 'OPTIONS':
-        return handle_options_request()
-    elif request.method == 'POST':
-        urls = request.json.get('urls', [])
-        urls_to_text = [{
-            "url": url, 
-            "content_type": "text", 
-            "content": pages.cache(url)['text'][:Config.TEXT_LIMIT]} 
-                        for url in urls]
-        def to_map(data):
-            return {d['url']: d['response'] for d in data}
-        urls_to_educational_level = to_map(educational_levels.classify(urls_to_text))
-        urls_to_resource_type = to_map(resource_types.classify(urls_to_text))
-        urls_to_subject = to_map(subjects.classify(urls_to_text))
-        results = [
-            {'url': url, 
-             'data': {
-                 'educationalLevel': urls_to_educational_level[url],
-                 'resourceType': urls_to_resource_type[url],
-                 'subject': urls_to_subject[url]
-                 }} for url in urls]
-        response = jsonify({'results':results})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response
-
-        
-@api.route('/enhanced-snippets_v1', methods=['POST', 'OPTIONS'])
-def enhanced_snippets_v1():
-    if request.method == 'OPTIONS':
-        return handle_options_request()
-    elif request.method == 'POST':
-        urls = request.json.get('urls', [])
-        task_desc = request.json.get('task_desc')
-        assert task_desc is not None
-        urls_to_text = [{
-            "url": url, 
-            "content_type": "text", 
-            "content": pages.cache(url)['text'][:Config.TEXT_LIMIT],
-            "facet": task_desc} 
-                        for url in urls]
-        def to_map(data):
-            return {d['url']: d['response'] for d in data}
-        urls_to_enhanced_snippet = to_map(snippets.enhance(urls_to_text, task_desc))
-        results = [
-            {'url': url, 
-             'data': {
-                 'enhancedSnippet': urls_to_enhanced_snippet.get(url),
-                 }} for url in urls]
-        response = jsonify({'results':results})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response
-        
 @api.route('/study-settings', methods=['OPTIONS', 'POST'])
 def study_settings():
     if request.method == 'OPTIONS':
