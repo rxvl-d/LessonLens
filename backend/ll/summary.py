@@ -50,7 +50,7 @@ class Summarizer:
         else:
           return None
 
-    def summarize_v4(self, query, serp_data):
+    def summarize_fast(self, serp_data):
         summary = [extract_general_attributes(result) for result in serp_data]
         attr_importances = calculate_attribute_importance(summary)
         out = {'query_type': None, 

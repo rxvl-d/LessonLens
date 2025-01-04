@@ -2,17 +2,17 @@ import { useEffect, useRef } from 'react';
 import * as React from 'react';
 import * as d3 from 'd3';
 import { Typography, Box } from '@mui/material';
-import { SummaryV4, TaggedUrl, SummaryAllFields, AttributeImportance } from '../../types/summary';
+import { Summary, TaggedUrl, SummaryAllFields } from '../../types/summary';
 
 interface SunburstChartProps {
-  data: SummaryV4;
+  data: Summary;
   onHover?: (items: TaggedUrl[], path: Array<{ attribute: string, value: string }>, count: number) => void;
 }
 
 // Get all attributes except 'url'
 const allAttributes = SummaryAllFields;
 
-function transformData(data: SummaryV4) {
+function transformData(data: Summary) {
   // Sort attributes by importance
   const attrImportanceMap = new Map(
     data.attribute_importances.map(ai => [ai.attribute, ai.importance])
@@ -93,170 +93,6 @@ function transformData(data: SummaryV4) {
     children: buildHierarchy(data.tagged_urls, sortedAttributes)
   };
 }
-
-
-export const SunburstChartNew: React.FC<SunburstChartProps> = ({ data, onHover }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-  
-  useEffect(() => {
-    if (!svgRef.current) return;
-
-    // Clear previous content
-    d3.select(svgRef.current).selectAll("*").remove();
-
-    // Setup dimensions
-    const margin = { top: 40, right: 40, bottom: 40, left: 70 };
-    const width = 800 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
-
-    // Process data to get combinations
-    const combinations = new Map();
-    data.tagged_urls.forEach(url => {
-      const key = [
-        url.includes_analogies,
-        url.visualization_tools,
-        url.curriculum_alignment
-      ].join('|');
-      
-      if (!combinations.has(key)) {
-        combinations.set(key, {
-          values: [
-            url.includes_analogies,
-            url.visualization_tools,
-            url.curriculum_alignment
-          ],
-          urls: [url],
-          count: 1
-        });
-      } else {
-        const existing = combinations.get(key);
-        existing.urls.push(url);
-        existing.count++;
-      }
-    });
-
-    // Convert to array and sort by count
-    const combinationsArray = Array.from(combinations.entries())
-      .map(([key, value]) => ({
-        id: key,
-        ...value
-      }))
-      .sort((a, b) => b.count - a.count);
-
-    // Create SVG
-    const svg = d3.select(svgRef.current)
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    // Attributes we're visualizing
-    const attributes = ['includes_analogies', 'visualization_tools', 'curriculum_alignment'];
-    const attributeLabels = ['Analogies', 'Visualizations', 'Curriculum'];
-
-    // Create scales
-    const xScale = d3.scaleBand()
-      .domain(attributes)
-      .range([0, width])
-      .padding(0.1);
-
-    const yScale = d3.scaleBand()
-      .domain(combinationsArray.map(d => d.id))
-      .range([0, height])
-      .padding(0.1);
-
-    // Color scale for the circles
-    const colorScale = d3.scaleOrdinal()
-      .domain(['Includes Analogies', 'Includes Visualization Tools', 'Includes Curriculum Alignment'])
-      .range(['#4299e1', '#48bb78', '#ed64a6']);
-
-    // Draw attribute labels
-    svg.selectAll(".attribute-label")
-      .data(attributeLabels)
-      .join("text")
-      .attr("class", "attribute-label")
-      .attr("x", (d, i) => xScale(attributes[i])! + xScale.bandwidth() / 2)
-      .attr("y", -10)
-      .attr("text-anchor", "middle")
-      .text(d => d)
-      .style("font-size", "16px");
-
-    // Create rows for each combination
-    const rows = svg.selectAll(".combination-row")
-      .data(combinationsArray)
-      .join("g")
-      .attr("class", "combination-row")
-      .attr("transform", d => `translate(0,${yScale(d.id)})`)
-      .on("mouseenter", (event, d) => {
-        const path = d.values.map((value, i) => ({
-          attribute: attributes[i],
-          value: value
-        }));
-        onHover?.(d.urls, path, d.count);
-      });
-
-    // Add count labels
-    rows.append("text")
-      .attr("x", -10)
-      .attr("y", yScale.bandwidth() / 2)
-      .attr("dy", "0.35em")
-      .attr("text-anchor", "end")
-      .text(d => `${d.count} URLs`)
-      .style("font-size", "12px");
-
-    // Add circles for each attribute
-    rows.selectAll("circle")
-      .data(d => d.values.map((value, i) => ({
-        value,
-        attribute: attributes[i]
-      })))
-      .join("circle")
-      .attr("cx", d => xScale(d.attribute)! + xScale.bandwidth() / 2)
-      .attr("cy", yScale.bandwidth() / 2)
-      .attr("r", yScale.bandwidth() / 3)
-      .attr("fill", d => 
-        d.value.startsWith('Includes') ? colorScale(d.value) : "#e2e8f0"
-      )
-      .attr("stroke", d => 
-        d.value.startsWith('Includes') ? d3.rgb(colorScale(d.value)).darker(0.5) : "#cbd5e0"
-      )
-      .attr("stroke-width", 1);
-
-    // Add background hover areas
-    rows.insert("rect", ":first-child")
-      .attr("x", -margin.left)
-      .attr("width", width + margin.left)
-      .attr("height", yScale.bandwidth())
-      .attr("fill", "transparent")
-      .attr("class", "hover-area")
-      .on("mouseenter", function() {
-        d3.select(this.parentNode).select(".combination-background")
-          .attr("opacity", 0.1);
-      })
-      .on("mouseleave", function() {
-        d3.select(this.parentNode).select(".combination-background")
-          .attr("opacity", 0);
-      });
-
-    rows.insert("rect", ":first-child")
-      .attr("class", "combination-background")
-      .attr("x", -margin.left)
-      .attr("width", width + margin.left)
-      .attr("height", yScale.bandwidth())
-      .attr("fill", "#000")
-      .attr("opacity", 0);
-
-  }, [data, onHover]);
-
-  return (
-    <svg 
-      ref={svgRef} 
-      className="w-full h-full"
-      style={{ minHeight: "400px" }}
-    />
-  );
-};
-
 
 export const SunburstChart: React.FC<SunburstChartProps> = ({ data, onHover }) => {
   const svgRef = useRef<SVGSVGElement>(null);

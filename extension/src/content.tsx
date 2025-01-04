@@ -6,10 +6,9 @@ import './content.scss';
 import { StudySettings } from './types/study';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ResizeObserver } from './mock/ResizeObserver';
 import SearchResultsOverlay from "./components/SearchResultsOverlay/SearchResultsOverlay";
 import { APIService } from "./services/api";
-import { EnhancedSnippet, Metadata, WithURL, SearchResult, MetadataResult, EnhancedSnippetResult } from "./types/summary";
+import { SearchResult, MetadataResult, EnhancedSnippetResult } from "./types/summary";
 import SearchResultMetadata from './components/SearchResultMetadata/SearchResultMetadata';
 
 // Initialize storage manager

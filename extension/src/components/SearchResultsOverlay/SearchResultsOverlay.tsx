@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { SummaryResult, SummaryV4, TaggedUrl } from '../../types/summary';
+import { Summary, TaggedUrl } from '../../types/summary';
 import { SunburstChart, SliceDescription, toTitleCase } from './SunburstComponents';
 import { Box } from '@mui/material';
 
 interface Props {
-  summary: SummaryV4;
+  summary: Summary;
   onClose: () => void;
 }
 

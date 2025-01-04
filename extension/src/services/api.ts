@@ -1,8 +1,8 @@
-import { EnhancedSnippet, EnhancedSnippetResult, MetadataResult, SearchResult, Summary, SummaryResult, SummaryV4, WithURLs } from '../types/summary';
+import { EnhancedSnippetResult, MetadataResult, SearchResult, Summary } from '../types/summary';
 import { StudySettings } from '../types/study';
 
 export class APIService {
-  public static async getSummary(query: string, results: SearchResult[]): Promise<SummaryV4> {
+  public static async getSummary(query: string, results: SearchResult[]): Promise<Summary> {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
         { 
