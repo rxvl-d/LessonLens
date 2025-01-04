@@ -58,9 +58,16 @@ def train_other_classifier(df, target_column):
 # Prediction
 def predict_with_threshold(model, input_data, threshold=0.5):
     confidence_scores = model.decision_function(input_data)[0]
+    
+    # Handle both binary (float) and multiclass (array) cases
     max_confidence = confidence_scores if type(confidence_scores) is np.float64 else max(abs(confidence_scores))
     prediction = model.predict(input_data)[0]
-    return 'Other' if max_confidence < threshold else prediction
+    
+    # Return tuple of (label, confidence)
+    if max_confidence < threshold:
+        return {'label': 'Other', 'confidence': max_confidence}
+    else:
+        return {'label': prediction, 'confidence': max_confidence}
 
 def commercial_classifier(url, title, description, content=None):
     with open('models/commercial_classifier.pkl', 'rb') as f:

@@ -4,13 +4,18 @@ export interface SearchResult {
   url: string;
 }
 
+export interface ConfidenceLabel {
+  label: string;
+  confidence: number;
+}
+
 export interface TaggedUrl {
   url: string;
-  is_commercial: string;
-  is_educational: string;
-  educational_level: string;  
-  audience: string;
-  source_institution_type: string;
+  is_commercial: ConfidenceLabel;
+  is_educational: ConfidenceLabel;
+  educational_level: ConfidenceLabel;  
+  audience: ConfidenceLabel;
+  source_institution_type: ConfidenceLabel;
 }
 
 // List of all possible fields as strings

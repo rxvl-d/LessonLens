@@ -31,7 +31,7 @@ function transformData(data: Summary) {
     
     // Handle values as strings or arrays of strings
     const getValues = (item: TaggedUrl, attr: string): string[] => {
-      const value = item[attr];
+      const value = item[attr]['label'];
       if (value === undefined || value === null) {
         return [];
       }

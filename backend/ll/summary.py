@@ -89,9 +89,9 @@ def calculate_attribute_importance(data):
         for item in data:
             value = item[attr]
             if isinstance(value, list):
-                all_values.extend(value)
+                all_values.extend(value['label'])
             else:
-                all_values.append(value)
+                all_values.append(value['label'])
         
         entropy_scores[attr] = calculate_entropy(all_values)
     
