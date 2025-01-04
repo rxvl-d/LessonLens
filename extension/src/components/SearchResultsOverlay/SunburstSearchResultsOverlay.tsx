@@ -9,7 +9,7 @@ interface Props {
   onClose: () => void;
 }
 
-const SearchResultsOverlay: React.FC<Props> = ({ summary, onClose }) => {
+const SunburstSearchResultsOverlay: React.FC<Props> = ({ summary, onClose }) => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [showRawData, setShowRawData] = useState(false);
   const [hoveredSliceInfo, setHoveredSliceInfo] = useState<{
@@ -73,4 +73,4 @@ const SearchResultsOverlay: React.FC<Props> = ({ summary, onClose }) => {
   );
 };
 
-export default SearchResultsOverlay;
+export default SunburstSearchResultsOverlay;

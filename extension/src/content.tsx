@@ -6,7 +6,7 @@ import './content.scss';
 import { FeatureSettings, DEFAULT_SETTINGS } from './types/settings';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import SearchResultsOverlay from "./components/SearchResultsOverlay/SearchResultsOverlay";
+import StackedSearchResultsOverlay from "./components/SearchResultsOverlay/StackedSearchResultsOverlay";
 import { APIService } from "./services/api";
 import { SearchResult, MetadataResult, EnhancedSnippetResult } from "./types/summary";
 import SearchResultMetadata from './components/SearchResultMetadata/SearchResultMetadata';
@@ -158,7 +158,7 @@ async function processResults(settings: FeatureSettings): Promise<void> {
       }
 
       ReactDOM.render(
-        <SearchResultsOverlay summary={summary} onClose={() => {
+        <StackedSearchResultsOverlay summary={summary} onClose={() => {
           if (overlayRoot && overlayRoot.parentNode) {
             overlayRoot.parentNode.removeChild(overlayRoot);
           }
