@@ -270,21 +270,4 @@ browserStorage.get(null)
       processResults(studySettings, currentTaskIndex);
     }, false);
 
-    if (searchEngineConfig.ajaxResults) {
-
-      // Observe resize event on result wrapper
-      // let isResized: any;
-      // const resizeObserver = new ResizeObserver(() => {
-      //   window.clearTimeout( isResized );
-      //   isResized = setTimeout(() => {
-      //     processResults(studySettings, currentTaskIndex);
-      //   }, 500);
-      // });
-
-      // const resultsWrappers = document.querySelectorAll(searchEngineConfig.observerSelector);
-      // resultsWrappers.forEach(resultsWrapper => {
-      //   resizeObserver.observe(resultsWrapper);
-      // });
-
-    }
   });
