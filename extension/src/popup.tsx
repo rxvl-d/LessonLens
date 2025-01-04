@@ -8,9 +8,9 @@ import { TssCacheProvider } from "tss-react";
 import createCache from "@emotion/cache";
 import { CHROME, FIREFOX } from './constants';
 import 'chrome-storage-promise';
-import StudyPopup from './components/StudyPopup/StudyPopup';
+import SettingsPopup from './components/SettingsPopup/SettingsPopup';
 
-
+// Create theme configuration
 const theme = createTheme({
   colorSchemes: {
     light: {
@@ -93,7 +93,7 @@ ReactDOM.render(
   <CacheProvider value={muiCache}>
     <TssCacheProvider value={tssCache}> 
       <ThemeProvider theme={theme} defaultMode="system">
-        <StudyPopup />
+        <SettingsPopup />
       </ThemeProvider>
     </TssCacheProvider>
   </CacheProvider>,

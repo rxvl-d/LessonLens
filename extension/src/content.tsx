@@ -1,9 +1,9 @@
 import { CHROME, FIREFOX } from './constants';
 import StorageManager from "./content/storageManager";
-import { SearchEngineConfig, DisplayStyle } from "./types";
+import { SearchEngineConfig } from "./types";
 import * as config from "./config";
 import './content.scss';
-import { StudySettings } from './types/study';
+import { FeatureSettings, DEFAULT_SETTINGS } from './types/settings';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import SearchResultsOverlay from "./components/SearchResultsOverlay/SearchResultsOverlay";
@@ -14,9 +14,6 @@ import SearchResultMetadata from './components/SearchResultMetadata/SearchResult
 // Initialize storage manager
 const storageManager = new StorageManager();
 let overlayRoot: HTMLDivElement | null = null;
-
-let studySettings: StudySettings;
-let currentTaskIndex: number;
 
 // Determine search engine and apply right config
 const searchEngine = (location.host.match(/([^.]+)\.\w{2,3}(?:\.\w{2})?$/) || [])[1];
@@ -29,7 +26,7 @@ function replaceSnippet(result: Element, enhancedSnippet: EnhancedSnippetResult,
     case 'google':
       snippetElement = result.querySelector('div[style*="webkit-line-clamp"]');
       break;
-     case 'duckduckgo':
+    case 'duckduckgo':
       snippetElement = result.querySelector('.result__snippet');
       break;
     case 'bing':
@@ -63,7 +60,6 @@ function extractQuery(): string {
 function extractSearchResults(searchEngine: string): Array<[Element, SearchResult | null]> {
   const config = searchEngineConfig;
   
-  // Get all result elements
   const resultElements = document.querySelectorAll(
     config.resultSelector
   );
@@ -73,7 +69,6 @@ function extractSearchResults(searchEngine: string): Array<[Element, SearchResul
       let titleElement: Element | null = null;
       let descriptionElement: Element | null = null;
 
-      // Extract title and description based on search engine
       switch(searchEngine) {
         case 'google':
           titleElement = result.querySelector('h3');
@@ -104,11 +99,10 @@ function extractSearchResults(searchEngine: string): Array<[Element, SearchResul
       const description = descriptionElement?.textContent?.trim() || '';
       const url = (result.querySelector('a')?.href || '').trim();
       
-      // Only add results that have either a title or description
       if (title || description) {
         return [result, { title, description, url }];
       } else {
-        return [result, null ];
+        return [result, null];
       }
     } catch (e) {
       console.warn('Error extracting result:', e);
@@ -118,13 +112,12 @@ function extractSearchResults(searchEngine: string): Array<[Element, SearchResul
 }
 
 // Process one result
-function processResult (
+function processResult(
   r: Element, 
   position?: number,
   resultMetadata?: MetadataResult,
   resultEnhancedSnippet?: EnhancedSnippetResult
-): DisplayStyle | null {
-  let displayStyle: DisplayStyle | null = null;
+): void {
   try {
     const result = r as HTMLElement;
     result.classList.add('lessonlens_result', 'lessonlens_result-' + searchEngine);
@@ -144,29 +137,18 @@ function processResult (
       replaceSnippet(result, resultEnhancedSnippet, searchEngine);
     }
   } catch (e) {
-    console.warn(e);
-    // Try to process result again - Might need this
-    // if (++processResultsAttempt <= 3) {
-    //   setTimeout(() => {
-    //     processResult(r, domainList, options, processResultsAttempt, resultMetadata);
-    //   }, 100 * Math.pow(processResultsAttempt, 3));
-    // }
+    console.warn('Error processing result:', e);
   }
-  return displayStyle;
 }
 
 // Process results function
-async function processResults (studySettings: StudySettings, currentTask: number): Promise<void> {
-
+async function processResults(settings: FeatureSettings): Promise<void> {
   const results = extractSearchResults(searchEngine);
   const query = extractQuery();
-  const flags = studySettings.tasks[currentTask].feature_flags;
-  const showSnippets = flags.includes('snippets');
-  const showMetadata = flags.includes('metadata');
-  const showSummary = flags.includes('summary');
-  const non_null_results = results.flatMap(([_, r]) => r? [r] : [])
-  if (showSummary) {
+  const non_null_results = results.flatMap(([_, r]) => r ? [r] : []);
 
+  // Only fetch and show the SERP overview if enabled
+  if (settings.showSerpOverview && non_null_results.length > 0) {
     try {
       const summary = await APIService.getSummary(query, non_null_results);
       if (!overlayRoot) {
@@ -186,10 +168,10 @@ async function processResults (studySettings: StudySettings, currentTask: number
     } catch (error) {
       console.error('Error fetching summary:', error);
     }
-
   }
 
-  if (showMetadata) {
+  // Only fetch and show metadata if enabled
+  if (settings.showMetadata) {
     try {
       const metadata = await APIService.getMetadata(non_null_results);
       results.forEach(([r, searchResult]) => {
@@ -202,7 +184,9 @@ async function processResults (studySettings: StudySettings, currentTask: number
       console.error('Error fetching metadata:', error);
     }
   }
-  if (showSnippets) {
+
+  // Only fetch and show enhanced snippets if enabled
+  if (settings.showEnhancedSnippets) {
     try {
       const enhancedSnippets = await APIService.getEnhancedSnippets(non_null_results, query);
       results.forEach(([r, searchResult]) => {
@@ -215,7 +199,6 @@ async function processResults (studySettings: StudySettings, currentTask: number
       console.error('Error fetching enhanced snippets:', error);
     }
   }
-
 }
 
 const browserName = typeof browser === 'undefined' ? typeof chrome === 'undefined' ?
@@ -234,40 +217,40 @@ switch (browserName) {
     browserStorage = null;
 }
 
-browserStorage.get(null)
-  .then((o: any) => {
-    studySettings = o && o.studySettings as StudySettings;
-    currentTaskIndex = o && (o.currentTaskIndex || 0) as number;
+// Initial setup and processing
+browserStorage.get('featureSettings')
+  .then((storage: any) => {
+    const settings = storage?.featureSettings || DEFAULT_SETTINGS;
+    
     // Initial process results
-    processResults(studySettings, currentTaskIndex);
+    processResults(settings);
 
     // Re-process results on page load if it wasn't done initially
     if (document.readyState !== 'complete') {
       window.addEventListener('load', () => {
-        // Removed due to the summary getting the updated snippets issue
-        // processResults(studySettings, currentTaskIndex);
+        processResults(settings);
       });
     }
 
     // Process results on DOM change
     const targets = document.querySelectorAll(searchEngineConfig.observerSelector);
     targets.forEach(target => {
-      const observer = new MutationObserver(function () {
-        processResults(studySettings, currentTaskIndex);
+      const observer = new MutationObserver(() => {
+        processResults(settings);
       });
       if (target) observer.observe(target, { childList: true });
     });
 
     // Process results on storage change event
-    storageManager.oryginalBrowserStorage.onChanged.addListener((storage: any) => {
-      studySettings = (storage.studySettings && storage.studySettings.newValue) || studySettings;
-      currentTaskIndex = (storage.currentTaskIndex && storage.currentTaskIndex.newValue) || currentTaskIndex;
-      processResults(studySettings, currentTaskIndex);
+    storageManager.oryginalBrowserStorage.onChanged.addListener((changes: any) => {
+      if (changes.featureSettings) {
+        const newSettings = changes.featureSettings.newValue || DEFAULT_SETTINGS;
+        processResults(newSettings);
+      }
     });
 
     // Process results on add new page by AutoPagerize extension
-    document.addEventListener("AutoPagerize_DOMNodeInserted", function () {
-      processResults(studySettings, currentTaskIndex);
+    document.addEventListener("AutoPagerize_DOMNodeInserted", () => {
+      processResults(settings);
     }, false);
-
   });
