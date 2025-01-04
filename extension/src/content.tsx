@@ -161,7 +161,6 @@ async function processResults (studySettings: StudySettings, currentTask: number
   const results = extractSearchResults(searchEngine);
   const query = extractQuery();
   const flags = studySettings.tasks[currentTask].feature_flags;
-  const relevance_dimensions = studySettings.tasks[currentTask].relevance_dimensions;
   const showSnippets = flags.includes('snippets');
   const showMetadata = flags.includes('metadata');
   const showSummary = flags.includes('summary');
