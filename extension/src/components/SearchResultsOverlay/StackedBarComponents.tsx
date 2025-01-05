@@ -1,10 +1,23 @@
 import * as React from 'react';
 import * as d3 from 'd3';
 import { Summary, TaggedUrl, SummaryAllFields } from '../../types/summary';
-import { Box } from '@mui/material';
+import { Box, IconButton, Typography, Tooltip } from '@mui/material';
 
-interface StackedBarVisualizationProps {
-  data: Summary;
+// Constants 
+const PASTEL_COLORS = [
+  '#FFB3BA', // Pastel Red/Pink
+  '#BAFFC9', // Pastel Green
+  '#BAE1FF', // Pastel Blue
+  '#FFFFBA', // Pastel Yellow
+  '#FFB3F7', // Pastel Purple
+  '#E0BBE4'  // Pastel Lavender
+];
+
+// Types
+interface AttributeData {
+  attribute: string;
+  importance: number;
+  segments: MergedSegment[] | AggregatedSegment[];
 }
 
 interface MergedSegment {
@@ -15,25 +28,334 @@ interface MergedSegment {
   confidences: number[];
 }
 
-interface AttributeData {
-  attribute: string;
-  importance: number;
-  segments: MergedSegment[];
+interface AggregatedSegment {
+  value: string;
+  count: number;
+  percentage: number;
+  confidences: number[];
 }
 
-function transformData(data: Summary): AttributeData[] {
-  // Sort attributes by importance
+// Helper Functions
+const getSegmentColors = (baseColor: string, numSegments: number): string[] => {
+  const baseHsl = d3.hsl(baseColor);
+  return Array.from({ length: numSegments }, (_, i) => {
+    const hue = ((baseHsl.h || 0) + (i * 60 / numSegments)) % 360;
+    return d3.hsl(hue, baseHsl.s, baseHsl.l).toString();
+  });
+};
+
+const truncateText = (text: string, maxWidth: number, fontSize: number = 12): string => {
+  const approxCharWidth = fontSize * 0.6; // Approximate width of a character
+  const maxChars = Math.floor(maxWidth / approxCharWidth);
+  if (text.length > maxChars) {
+    return text.slice(0, maxChars - 3) + '...';
+  }
+  return text;
+};
+
+// Confidence Bar Component
+const ConfidenceBar: React.FC<{ confidences: number[] }> = ({ confidences }) => {
+  const avgConfidence = d3.mean(confidences) || 0;
+  const normalizedConfidence = Math.round(avgConfidence * 100);
+  const filledBlocks = Math.floor(normalizedConfidence / 20);
+
+  const getColor = (level: number) => {
+    if (level >= 4) return '#4CAF50';
+    if (level >= 3) return '#8BC34A';
+    if (level >= 2) return '#FFEB3B';
+    if (level >= 1) return '#FF9800';
+    return '#F44336';
+  };
+
+  return (
+    <Tooltip title={`Confidence: ${normalizedConfidence}%`}>
+      <div style={{ 
+        width: '20px', 
+        display: 'flex', 
+        flexDirection: 'column-reverse', 
+        gap: '2px',
+        height: '40px',
+        justifyContent: 'center'
+      }}>
+        {Array.from({ length: 5 }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              width: '20px',
+              height: '6px',
+              backgroundColor: i < filledBlocks ? getColor(filledBlocks) : '#e0e0e0',
+              borderRadius: '2px',
+            }}
+          />
+        ))}
+      </div>
+    </Tooltip>
+  );
+};
+
+// Aligned View Component
+const AlignedView: React.FC<{ data: AttributeData[] }> = ({ data }) => {
+  const dimensions = {
+    width: 800,
+    barHeight: 40,
+    labelWidth: 180,
+    confidenceWidth: 40,
+    margin: { top: 20, right: 50, bottom: 20, left: 180 },
+    gap: 2,
+  };
+
+  const innerWidth = (dimensions.width - dimensions.margin.left - dimensions.margin.right);
+  const totalSegments = data[0]?.segments.length || 1;
+  const segmentBaseWidth = (innerWidth - ((totalSegments - 1) * dimensions.gap)) / totalSegments / 3.0;
+
+  return (
+    <svg 
+      width={dimensions.width} 
+      height={(data.length * (dimensions.barHeight + 20)) + dimensions.margin.top + dimensions.margin.bottom}
+    >
+      <g transform={`translate(${dimensions.margin.left},${dimensions.margin.top})`}>
+        {data.map((attrData, attrIndex) => {
+          const baseColor = PASTEL_COLORS[attrIndex % PASTEL_COLORS.length];
+          const segmentColors = getSegmentColors(baseColor, attrData.segments.length);
+          const y = attrIndex * (dimensions.barHeight + 20);
+
+          return (
+            <g key={attrData.attribute}>
+              {/* Attribute Label */}
+              <text
+                x={-10}
+                y={y + dimensions.barHeight / 2}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontSize="12px"
+              >
+                {formatAttributeName(attrData.attribute)}
+              </text>
+
+              {/* Segments */}
+              {(attrData.segments as MergedSegment[]).map((segment, segIndex) => {
+                const x = segment.startIndex * (segmentBaseWidth + dimensions.gap);
+                const width = (segment.length * segmentBaseWidth) - dimensions.gap;
+                
+                const displayText = truncateText(
+                  segment.value, 
+                  width - 10, 
+                  12
+                );
+
+                return (
+                  <Tooltip 
+                    key={`${attrData.attribute}-${segIndex}`}
+                    title={segment.value}
+                  >
+                    <g>
+                      <rect
+                        x={x}
+                        y={y}
+                        width={width}
+                        height={dimensions.barHeight}
+                        fill={segmentColors[segIndex]}
+                        opacity={0.8}
+                        stroke="#fff"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={x + width / 2}
+                        y={y + dimensions.barHeight / 2}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="black"
+                        fontSize="12px"
+                      >
+                        {displayText}
+                      </text>
+                    </g>
+                  </Tooltip>
+                );
+              })}
+
+              {/* Confidence Bar */}
+              <foreignObject
+                x={innerWidth + 10}
+                y={y}
+                width={dimensions.confidenceWidth}
+                height={dimensions.barHeight}
+              >
+                <ConfidenceBar 
+                  confidences={(attrData.segments as MergedSegment[])
+                    .flatMap(segment => segment.confidences)} 
+                />
+              </foreignObject>
+            </g>
+          );
+        })}
+      </g>
+    </svg>
+  );
+};
+
+// Aggregated View Component
+const AggregatedView: React.FC<{ data: AttributeData[] }> = ({ data }) => {
+  const dimensions = {
+    width: 800,
+    barHeight: 40,
+    labelWidth: 180,
+    confidenceWidth: 40,
+    margin: { top: 20, right: 50, bottom: 20, left: 180 },
+    gap: 2,
+  };
+
+  const innerWidth = dimensions.width - dimensions.margin.left - dimensions.margin.right;
+
+  return (
+    <svg 
+      width={dimensions.width} 
+      height={(data.length * (dimensions.barHeight + 20)) + dimensions.margin.top + dimensions.margin.bottom}
+    >
+      <g transform={`translate(${dimensions.margin.left},${dimensions.margin.top})`}>
+        {data.map((attrData, attrIndex) => {
+          const baseColor = PASTEL_COLORS[attrIndex % PASTEL_COLORS.length];
+          const segmentColors = getSegmentColors(baseColor, attrData.segments.length);
+          const y = attrIndex * (dimensions.barHeight + 20);
+
+          let cumulativeX = 0;
+
+          return (
+            <g key={attrData.attribute}>
+              {/* Attribute Label */}
+              <text
+                x={-10}
+                y={y + dimensions.barHeight / 2}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontSize="12px"
+              >
+                {formatAttributeName(attrData.attribute)}
+              </text>
+
+              {/* Segments */}
+              {(attrData.segments as AggregatedSegment[]).map((segment, segIndex) => {
+                const width = (segment.percentage / 100) * innerWidth - dimensions.gap;
+                const x = cumulativeX;
+                cumulativeX += width + dimensions.gap;
+
+                const displayText = truncateText(
+                  `${segment.value} (${segment.percentage.toFixed(1)}%)`,
+                  width - 10,
+                  12
+                );
+
+                return (
+                  <Tooltip 
+                    key={`${attrData.attribute}-${segIndex}`}
+                    title={`${segment.value} (${segment.percentage.toFixed(1)}%)`}
+                  >
+                    <g>
+                      <rect
+                        x={x}
+                        y={y}
+                        width={width}
+                        height={dimensions.barHeight}
+                        fill={segmentColors[segIndex]}
+                        opacity={0.8}
+                        stroke="#fff"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={x + width / 2}
+                        y={y + dimensions.barHeight / 2}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="black"
+                        fontSize="12px"
+                      >
+                        {displayText}
+                      </text>
+                    </g>
+                  </Tooltip>
+                );
+              })}
+
+              {/* Confidence Bar */}
+              <foreignObject
+                x={innerWidth + 10}
+                y={y}
+                width={dimensions.confidenceWidth}
+                height={dimensions.barHeight}
+              >
+                <ConfidenceBar 
+                  confidences={(attrData.segments as AggregatedSegment[])
+                    .flatMap(segment => segment.confidences)}
+                />
+              </foreignObject>
+            </g>
+          );
+        })}
+      </g>
+    </svg>
+  );
+};
+
+// Helper function for formatting attribute names
+const formatAttributeName = (attr: string): string => {
+  return attr
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+// Container component remains the same
+const StackedBarVisualization: React.FC<{ data: Summary }> = ({ data }) => {
+  const [viewMode, setViewMode] = React.useState<'aligned' | 'aggregated'>('aligned');
+  
+  const transformedData = React.useMemo(() => {
+    return viewMode === 'aligned' 
+      ? transformDataAligned(data)
+      : transformDataAggregated(data);
+  }, [data, viewMode]);
+
+  return (
+    <Box sx={{ position: 'relative', mt: 4 }}>
+      <Box sx={{ 
+        position: 'absolute', 
+        right: 0, 
+        top: -40, 
+        display: 'flex', 
+        gap: 1,
+        zIndex: 1
+      }}>
+        <IconButton 
+          onClick={() => setViewMode('aligned')}
+          color={viewMode === 'aligned' ? 'primary' : 'default'}
+        >
+          <Typography variant="body2">Each Result</Typography>
+        </IconButton>
+        <IconButton 
+          onClick={() => setViewMode('aggregated')}
+          color={viewMode === 'aggregated' ? 'primary' : 'default'}
+        >
+          <Typography variant="body2">All Results</Typography>
+        </IconButton>
+      </Box>
+      
+      {viewMode === 'aligned' 
+        ? <AlignedView data={transformedData} />
+        : <AggregatedView data={transformedData} />
+      }
+    </Box>
+  );
+};
+
+function transformDataAligned(data: Summary): AttributeData[] {
   const sortedAttributes = [...SummaryAllFields].sort((a, b) => {
     const aImp = data.attribute_importances.find(ai => ai.attribute === a)?.importance || 0;
     const bImp = data.attribute_importances.find(ai => ai.attribute === b)?.importance || 0;
     return bImp - aImp;
   });
 
-  // Group results by similarity
   const results = data.tagged_urls;
   const similarityGroups = groupBySimilarity(results);
 
-  // Create data structure for each attribute with merged segments
   return sortedAttributes.map(attr => {
     const rawSegments = similarityGroups.map((result, index) => ({
       value: result[attr].label,
@@ -42,7 +364,6 @@ function transformData(data: Summary): AttributeData[] {
       index
     }));
 
-    // Merge adjacent segments with same value
     const mergedSegments: MergedSegment[] = [];
     let currentSegment: MergedSegment | null = null;
 
@@ -83,7 +404,49 @@ function transformData(data: Summary): AttributeData[] {
   });
 }
 
-// Group results by similarity (number of matching attributes)
+function transformDataAggregated(data: Summary): AttributeData[] {
+  const sortedAttributes = [...SummaryAllFields].sort((a, b) => {
+    const aImp = data.attribute_importances.find(ai => ai.attribute === a)?.importance || 0;
+    const bImp = data.attribute_importances.find(ai => ai.attribute === b)?.importance || 0;
+    return bImp - aImp;
+  });
+
+  return sortedAttributes.map(attr => {
+    const valueMap = new Map<string, { count: number; confidences: number[] }>();
+    const totalResults = data.tagged_urls.length;
+
+    // Count occurrences of each value
+    data.tagged_urls.forEach(result => {
+      const value = result[attr].label;
+      const confidence = result[attr].confidence;
+      
+      if (!valueMap.has(value)) {
+        valueMap.set(value, { count: 1, confidences: [confidence] });
+      } else {
+        const current = valueMap.get(value)!;
+        current.count++;
+        current.confidences.push(confidence);
+      }
+    });
+
+    // Convert to array and sort by count
+    const segments: AggregatedSegment[] = Array.from(valueMap.entries())
+      .map(([value, data]) => ({
+        value,
+        count: data.count,
+        percentage: (data.count / totalResults) * 100,
+        confidences: data.confidences
+      }))
+      .sort((a, b) => a.count - b.count);
+
+    return {
+      attribute: attr,
+      importance: data.attribute_importances.find(ai => ai.attribute === attr)?.importance || 0,
+      segments
+    };
+  });
+}
+
 function groupBySimilarity(results: TaggedUrl[]): TaggedUrl[] {
   const sorted = [...results];
   sorted.sort((a, b) => {
@@ -96,201 +459,5 @@ function groupBySimilarity(results: TaggedUrl[]): TaggedUrl[] {
   return sorted;
 }
 
-const StackedBarVisualization: React.FC<StackedBarVisualizationProps> = ({ data }) => {
-  const svgRef = React.useRef<SVGSVGElement>(null);
-  const tooltipRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (!svgRef.current || !tooltipRef.current) return;
-
-    // Clear previous content
-    d3.select(svgRef.current).selectAll("*").remove();
-
-    const transformedData = transformData(data);
-    
-    // Setup dimensions
-    const width = 800;
-    const height = 400;
-    const margin = { top: 20, right: 120, bottom: 20, left: 180 };
-    const barHeight = 40;
-    const confidenceBarWidth = 40;
-    const innerWidth = width - margin.left - margin.right;
-    const tooltipPadding = 4;
-
-    // Create SVG
-    const svg = d3.select(svgRef.current)
-      .attr("viewBox", [0, 0, width, height])
-      .attr("width", width)
-      .attr("height", height);
-
-    // Create tooltip
-    const tooltip = d3.select(tooltipRef.current)
-      .style("position", "absolute")
-      .style("visibility", "hidden")
-      .style("background", "white")
-      .style("border", "1px solid #ddd")
-      .style("border-radius", "4px")
-      .style("padding", "8px")
-      .style("font-size", "12px");
-
-    // Create scales
-    const xScale = d3.scaleLinear()
-      .domain([0, data.tagged_urls.length])
-      .range([0, innerWidth]);
-
-    // Base colors for each attribute (matching sunburst)
-    const baseColors = [
-      '#FFB3BA', // Pastel Red/Pink
-      '#BAFFC9', // Pastel Green
-      '#BAE1FF', // Pastel Blue
-      '#FFFFBA', // Pastel Yellow
-      '#FFB3F7', // Pastel Purple
-    ];
-
-    // Create color scales for each attribute
-    const colorScales = baseColors.map(baseColor => 
-      d3.scaleLinear<string>()
-        .domain([0, 10]) // Assuming max 10 different values per attribute
-        .range([d3.rgb(baseColor).brighter(0.1), d3.rgb(baseColor).darker(0.5)])
-        .interpolate(d3.interpolateHcl)
-    );
-
-    // Color scale for confidence bars
-    const confidenceColorScale = d3.scaleSequential()
-      .domain([0, 1])
-      .interpolator(d3.interpolateRgb("#ff4444", "#44ff44"));
-
-    // Create container for bars
-    const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    // Draw bars for each attribute
-    transformedData.forEach((attrData, attrIndex) => {
-      const y = attrIndex * (barHeight + 20);
-      const colorScale = colorScales[attrIndex % colorScales.length];
-
-      // Draw attribute label
-      g.append("text")
-        .attr("x", -10)
-        .attr("y", y + barHeight / 2)
-        .attr("text-anchor", "end")
-        .attr("dominant-baseline", "middle")
-        .text(formatAttributeName(attrData.attribute));
-
-      // Get unique values for this attribute to assign consistent colors
-      const uniqueValues = Array.from(new Set(attrData.segments.map(s => s.value)));
-
-      // Draw merged segments
-      attrData.segments.forEach((segment, segmentIndex) => {
-        const x = xScale(segment.startIndex);
-        const width = xScale(segment.length) - 2; // 2px gap
-
-        // Draw segment rectangle
-        const rect = g.append("rect")
-          .attr("x", x)
-          .attr("y", y)
-          .attr("width", width)
-          .attr("height", barHeight)
-          .attr("fill", colorScale(uniqueValues.indexOf(segment.value)))
-          .attr("stroke", "#fff")
-          .attr("stroke-width", 1);
-
-        // Add segment label
-        const label = g.append("text")
-          .attr("x", x + width / 2)
-          .attr("y", y + barHeight / 2)
-          .attr("text-anchor", "middle")
-          .attr("dominant-baseline", "middle")
-          .attr("fill", "black")
-          .attr("font-size", "12px")
-          .text(segment.value);
-
-        // Check if label fits
-        const labelWidth = (label.node() as SVGTextElement).getComputedTextLength();
-        if (labelWidth > width - tooltipPadding * 2) {
-          label.text(truncateText(segment.value, width - tooltipPadding * 2));
-          
-          // Add hover behavior
-          rect.on("mouseover", (event) => {
-            const pt = svg.node().createSVGPoint();
-            pt.x = event.clientX;
-            pt.y = event.clientY;
-            const svgP = pt.matrixTransform(svg.node().getScreenCTM().inverse());
-        
-            tooltip
-                .style("visibility", "visible")
-                .style("left", `${svgP.x + 10}px`)
-                .style("top", `${svgP.y - 10}px`)
-                .html(`${segment.value}<br/>(${segment.length} results)`);
-          })
-          .on("mouseout", () => {
-            tooltip.style("visibility", "hidden");
-          });
-        }
-      });
-
-      // Draw confidence bar
-      const meanConfidence = d3.mean(attrData.segments.flatMap(s => s.confidences)) || 0;
-      const confidenceBar = g.append("rect")
-        .attr("x", innerWidth + 10)
-        .attr("y", y)
-        .attr("width", confidenceBarWidth)
-        .attr("height", barHeight)
-        .attr("fill", confidenceColorScale(meanConfidence))
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 1);
-
-      // Add confidence hover behavior
-      confidenceBar.on("mouseover", (event) => {
-        const confidenceText = attrData.segments
-          .map(s => `${s.value} (${s.length} results): ${Math.round(d3.mean(s.confidences)! * 100)}% confidence`)
-          .join("\n");
-        
-        tooltip
-          .style("visibility", "visible")
-          .style("left", `${event.pageX + 10}px`)
-          .style("top", `${event.pageY - 10}px`)
-          .style("white-space", "pre-line")
-          .html(confidenceText);
-      })
-      .on("mouseout", () => {
-        tooltip.style("visibility", "hidden");
-      });
-    });
-
-  }, [data]);
-
-  return (
-    <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
-      <svg ref={svgRef} />
-      <div ref={tooltipRef} />
-    </Box>
-  );
-};
-
-// Helper function to format attribute names
-function formatAttributeName(attr: string): string {
-  return attr
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
-// Helper function to truncate text with ellipsis
-function truncateText(text: string, width: number): string {
-  const ellipsis = '...';
-  const textWidth = getTextWidth(text);
-  
-  if (textWidth <= width) return text;
-  
-  const ratio = width / textWidth;
-  const truncLength = Math.floor((text.length * ratio) - ellipsis.length);
-  return text.slice(0, truncLength) + ellipsis;
-}
-
-// Helper function to estimate text width
-function getTextWidth(text: string): number {
-  return text.length * 7;
-}
 
 export default StackedBarVisualization;
