@@ -11,6 +11,7 @@ import SunburstSearchResultsOverlay from "./components/SearchResultsOverlay/Sunb
 import { APIService } from "./services/api";
 import { SearchResult, MetadataResult, EnhancedSnippetResult } from "./types/summary";
 import SearchResultMetadata from './components/SearchResultMetadata/SearchResultMetadata';
+import HybridSnippet from './components/HybridSnippetComponent/HybridSnippetComponent';
 
 // Initialize storage manager
 const storageManager = new StorageManager();
@@ -115,6 +116,7 @@ function extractSearchResults(searchEngine: string): Array<[Element, SearchResul
 // Process one result
 function processResult(
   r: Element, 
+  settings: FeatureSettings,
   position?: number,
   resultMetadata?: MetadataResult,
   resultEnhancedSnippet?: EnhancedSnippetResult
@@ -123,19 +125,35 @@ function processResult(
     const result = r as HTMLElement;
     result.classList.add('lessonlens_result', 'lessonlens_result-' + searchEngine);
 
-    if (resultMetadata && (result.parentElement.tagName != "BLOCK-COMPONENT")) {
-      const metadataContainer = document.createElement('div');
-      metadataContainer.classList.add('lessonlens_result_metadata')
-      result.parentElement.appendChild(metadataContainer);
+    if (resultMetadata && resultEnhancedSnippet && settings.showHybridSnippets) {
+      // Create hybrid view when both are available
+      const hybridContainer = document.createElement('div');
+      result.parentElement.appendChild(hybridContainer);
 
       ReactDOM.render(
-        <SearchResultMetadata isOpen={position == 0} metadata={resultMetadata} />,
-        metadataContainer
+        <HybridSnippet 
+          metadata={resultMetadata}
+          enhancedSnippet={resultEnhancedSnippet}
+          config={settings.hybridSnippetConfig}  // Access the config from settings
+        />,
+        hybridContainer
       );
-    }
+    } else {
+      // Original separate handling
+      if (resultMetadata && (result.parentElement.tagName != "BLOCK-COMPONENT")) {
+        const metadataContainer = document.createElement('div');
+        metadataContainer.classList.add('lessonlens_result_metadata')
+        result.parentElement.appendChild(metadataContainer);
 
-    if (resultEnhancedSnippet) {
-      replaceSnippet(result, resultEnhancedSnippet, searchEngine);
+        ReactDOM.render(
+          <SearchResultMetadata isOpen={position == 0} metadata={resultMetadata} />,
+          metadataContainer
+        );
+      }
+
+      if (resultEnhancedSnippet) {
+        replaceSnippet(result, resultEnhancedSnippet, searchEngine);
+      }
     }
   } catch (e) {
     console.warn('Error processing result:', e);
@@ -143,14 +161,53 @@ function processResult(
 }
 
 // Process results function
+// Process results function
 async function processResults(settings: FeatureSettings): Promise<void> {
   const results = extractSearchResults(searchEngine);
   const query = extractQuery();
   const non_null_results = results.flatMap(([_, r]) => r ? [r] : []);
 
-  // Only fetch and show the SERP overview if enabled
-  
-  // Only fetch and show the SERP overview if enabled
+  // Fetch metadata if needed for any feature
+  let metadata: MetadataResult[] = [];
+  if (settings.showMetadata || settings.showHybridSnippets) {
+    try {
+      metadata = await APIService.getMetadata(non_null_results);
+    } catch (error) {
+      console.error('Error fetching metadata:', error);
+    }
+  }
+
+  // Fetch enhanced snippets if needed for any feature
+  let enhancedSnippets: EnhancedSnippetResult[] = [];
+  if (settings.showEnhancedSnippets || settings.showHybridSnippets) {
+    try {
+      enhancedSnippets = await APIService.getEnhancedSnippets(non_null_results, query);
+    } catch (error) {
+      console.error('Error fetching enhanced snippets:', error);
+    }
+  }
+
+  // Process each result with appropriate data
+  results.forEach(([r, searchResult]) => {
+    if (!searchResult) return;
+
+    const [resultMetadata] = metadata
+      .map(m => [m] as const)
+      .find(([m]) => m.url === searchResult.url) ?? [undefined];
+      
+    const enhancedSnippet = enhancedSnippets
+      .find(m => m.url === searchResult.url);
+
+    // Only process if we have the data needed for the enabled features
+    if ((settings.showMetadata && resultMetadata) ||
+        (settings.showEnhancedSnippets && enhancedSnippet) ||
+        (settings.showHybridSnippets && resultMetadata && enhancedSnippet)) {
+      console.log(settings)
+      processResult(r, settings, 0, resultMetadata, enhancedSnippet);
+    }
+  });
+
+  // SERP overview processing
   if (settings.showSerpOverview && non_null_results.length > 0) {
     try {
       const summary = await APIService.getSummary(query, non_null_results);
@@ -186,37 +243,6 @@ async function processResults(settings: FeatureSettings): Promise<void> {
       console.error('Error fetching summary:', error);
     }
   }
-
-
-  // Only fetch and show metadata if enabled
-  if (settings.showMetadata) {
-    try {
-      const metadata = await APIService.getMetadata(non_null_results);
-      results.forEach(([r, searchResult]) => {
-        const [resultMetadata, index] = metadata
-          .map((m: MetadataResult, index) => [m, index] as const)
-          .find(([m]) => m.url === searchResult?.url) ?? [undefined, -1];
-        processResult(r, index, resultMetadata, null);
-      });
-    } catch (error) {
-      console.error('Error fetching metadata:', error);
-    }
-  }
-
-  // Only fetch and show enhanced snippets if enabled
-  if (settings.showEnhancedSnippets) {
-    try {
-      const enhancedSnippets = await APIService.getEnhancedSnippets(non_null_results, query);
-      results.forEach(([r, searchResult]) => {
-        const resultMetadata = enhancedSnippets.find(
-          (m: EnhancedSnippetResult) => m.url === searchResult?.url
-        );
-        processResult(r, null, null, resultMetadata);
-      });
-    } catch (error) {
-      console.error('Error fetching enhanced snippets:', error);
-    }
-  }
 }
 
 const browserName = typeof browser === 'undefined' ? typeof chrome === 'undefined' ?
@@ -246,7 +272,7 @@ browserStorage.get('featureSettings')
     // Re-process results on page load if it wasn't done initially
     if (document.readyState !== 'complete') {
       window.addEventListener('load', () => {
-        processResults(settings);
+        // processResults(settings);
       });
     }
 
@@ -254,7 +280,7 @@ browserStorage.get('featureSettings')
     const targets = document.querySelectorAll(searchEngineConfig.observerSelector);
     targets.forEach(target => {
       const observer = new MutationObserver(() => {
-        processResults(settings);
+        // processResults(settings);
       });
       if (target) observer.observe(target, { childList: true });
     });
@@ -269,6 +295,6 @@ browserStorage.get('featureSettings')
 
     // Process results on add new page by AutoPagerize extension
     document.addEventListener("AutoPagerize_DOMNodeInserted", () => {
-      processResults(settings);
+      // processResults(settings);
     }, false);
   });

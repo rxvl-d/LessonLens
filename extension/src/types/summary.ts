@@ -52,3 +52,14 @@ export interface EnhancedSnippetResult extends SearchResult {
   content: string;
   enhanced_snippet: string;
 }
+
+interface HybridSnippetConfig {
+  maxMetadataFields: number;  // How many metadata fields to show
+  maxQuestions: number;       // How many Q&A pairs to show
+  priorityFields: string[];   // Which metadata fields to prioritize
+}
+
+interface HybridSnippetResult extends SearchResult {
+  metadata: MetadataResult;
+  enhancedSnippet: EnhancedSnippetResult;
+}

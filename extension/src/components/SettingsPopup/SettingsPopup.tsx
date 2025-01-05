@@ -7,10 +7,11 @@ import {
   FormControlLabel,
   Button,
   Paper,
-  Divider
+  Divider,
+  Slider
 } from '@mui/material';
 import { browserStorage } from '../../popup';
-import { FeatureSettings, DEFAULT_SETTINGS } from '../../types/settings';
+import { HybridSnippetConfig, FeatureSettings, DEFAULT_SETTINGS } from '../../types/settings';
 
 const SettingsPopup: React.FC = () => {
   const [settings, setSettings] = React.useState<FeatureSettings>(DEFAULT_SETTINGS);
@@ -57,6 +58,32 @@ const SettingsPopup: React.FC = () => {
     } catch (error) {
       console.error('Failed to update settings:', error);
       setError('Failed to save settings. Please try again.');
+    }
+  };
+
+  const handleConfigChange = async (
+    setting: keyof HybridSnippetConfig,
+    newValue: number | number[]
+  ) => {
+    try {
+      const value = Array.isArray(newValue) ? newValue[0] : newValue;
+  
+      const newSettings = {
+        ...settings,
+        hybridSnippetConfig: {
+          ...settings.hybridSnippetConfig,
+          [setting]: value
+        }
+      };
+      
+      // Update storage
+      await browserStorage.set({ featureSettings: newSettings });
+      
+      // Update state
+      setSettings(newSettings);
+    } catch (error) {
+      console.error('Failed to update config:', error);
+      setError('Failed to save configuration. Please try again.');
     }
   };
 
@@ -130,11 +157,51 @@ const SettingsPopup: React.FC = () => {
 
           <Divider sx={{ my: 1 }} />
 
+          {/* Result Display Options */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={settings.showHybridSnippets}
+                onChange={() => handleSettingChange('showHybridSnippets')}
+              />
+            }
+            label="Combined View"
+          />
+          <Typography variant="caption" sx={{ pl: 4, mb: 1, color: 'text.secondary' }}>
+            Shows metadata and enhanced content together
+          </Typography>
+
+          {settings.showHybridSnippets && (
+            <Box sx={{ pl: 4, mb: 2 }}>
+              <Typography variant="body2">Maximum fields to show:</Typography>
+              <Slider
+                value={settings.hybridSnippetConfig.maxMetadataFields}
+                min={1}
+                max={5}
+                step={1}
+                marks
+                onChange={(_, value) => handleConfigChange('maxMetadataFields', value)}
+              />
+              <Typography variant="body2">Maximum questions to show:</Typography>
+              <Slider
+                value={settings.hybridSnippetConfig.maxQuestions}
+                min={1}
+                max={5}
+                step={1}
+                marks
+                onChange={(_, value) => handleConfigChange('maxQuestions', value)}
+              />
+            </Box>
+          )}
+
+          <Divider sx={{ my: 1 }} />
+
           <FormControlLabel
             control={
               <Switch
                 checked={settings.showMetadata}
                 onChange={() => handleSettingChange('showMetadata')}
+                disabled={settings.showHybridSnippets}
               />
             }
             label="Result Metadata"
@@ -143,13 +210,12 @@ const SettingsPopup: React.FC = () => {
             Displays educational metadata for each search result
           </Typography>
 
-          <Divider sx={{ my: 1 }} />
-
           <FormControlLabel
             control={
               <Switch
                 checked={settings.showEnhancedSnippets}
                 onChange={() => handleSettingChange('showEnhancedSnippets')}
+                disabled={settings.showHybridSnippets}
               />
             }
             label="Enhanced Snippets"
