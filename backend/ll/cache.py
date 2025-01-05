@@ -1,7 +1,6 @@
 import hashlib
 import json
 import logging
-import mimetypes
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -15,6 +14,8 @@ from PIL import Image
 log = logging.getLogger("cache")
 logging.getLogger("trafilatura").setLevel(logging.FATAL)
 logging.getLogger("urllib3").setLevel(logging.FATAL)
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def hash(key):
     return hashlib.md5(str(key).encode()).hexdigest()
@@ -43,7 +44,7 @@ class WebPageCache:
     def _get_content_type(self, url: str) -> Optional[str]:
         """Determine content type using HEAD request."""
         try:
-            head_response = requests.head(url, timeout=self.head_timeout)
+            head_response = requests.head(url, timeout=self.head_timeout, verify=False)
             return head_response.headers.get('content-type', '').split(';')[0]
         except requests.RequestException as e:
             self.logger.error(f"HEAD request failed for {url}: {e}")
@@ -82,7 +83,7 @@ class WebPageCache:
     def _download_file(self, url: str, content_type: str) -> Optional[str]:
         """Download file from URL and save with appropriate extension."""
         try:
-            response = requests.get(url, timeout=self.request_timeout)
+            response = requests.get(url, timeout=self.request_timeout, verify=False)
             response.raise_for_status()
             
             ext = self._get_file_extension(content_type)
