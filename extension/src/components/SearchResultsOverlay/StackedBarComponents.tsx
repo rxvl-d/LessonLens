@@ -212,11 +212,16 @@ const StackedBarVisualization: React.FC<StackedBarVisualizationProps> = ({ data 
           
           // Add hover behavior
           rect.on("mouseover", (event) => {
+            const pt = svg.node().createSVGPoint();
+            pt.x = event.clientX;
+            pt.y = event.clientY;
+            const svgP = pt.matrixTransform(svg.node().getScreenCTM().inverse());
+        
             tooltip
-              .style("visibility", "visible")
-              .style("left", `${event.pageX + 10}px`)
-              .style("top", `${event.pageY - 10}px`)
-              .html(`${segment.value}<br/>(${segment.length} results)`);
+                .style("visibility", "visible")
+                .style("left", `${svgP.x + 10}px`)
+                .style("top", `${svgP.y - 10}px`)
+                .html(`${segment.value}<br/>(${segment.length} results)`);
           })
           .on("mouseout", () => {
             tooltip.style("visibility", "hidden");
