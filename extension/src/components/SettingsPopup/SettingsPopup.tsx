@@ -106,6 +106,28 @@ const SettingsPopup: React.FC = () => {
             Shows a visualization of search result characteristics
           </Typography>
 
+          {/* Nested Visualization Type Toggle */}
+          <Box sx={{ pl: 4, mb: 1 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.useSunburstVisualization}
+                  onChange={() => handleSettingChange('useSunburstVisualization')}
+                  disabled={!settings.showSerpOverview}
+                  size="small"
+                />
+              }
+              label={
+                <Typography variant="body2">
+                  Use Sunburst View
+                </Typography>
+              }
+            />
+            <Typography variant="caption" sx={{ pl: 4, display: 'block', color: 'text.secondary' }}>
+              Switch between Stacked Bar and Sunburst visualizations
+            </Typography>
+          </Box>
+
           <Divider sx={{ my: 1 }} />
 
           <FormControlLabel

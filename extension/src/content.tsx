@@ -7,6 +7,7 @@ import { FeatureSettings, DEFAULT_SETTINGS } from './types/settings';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import StackedSearchResultsOverlay from "./components/SearchResultsOverlay/StackedSearchResultsOverlay";
+import SunburstSearchResultsOverlay from "./components/SearchResultsOverlay/SunburstSearchResultsOverlay";
 import { APIService } from "./services/api";
 import { SearchResult, MetadataResult, EnhancedSnippetResult } from "./types/summary";
 import SearchResultMetadata from './components/SearchResultMetadata/SearchResultMetadata';
@@ -148,6 +149,8 @@ async function processResults(settings: FeatureSettings): Promise<void> {
   const non_null_results = results.flatMap(([_, r]) => r ? [r] : []);
 
   // Only fetch and show the SERP overview if enabled
+  
+  // Only fetch and show the SERP overview if enabled
   if (settings.showSerpOverview && non_null_results.length > 0) {
     try {
       const summary = await APIService.getSummary(query, non_null_results);
@@ -158,17 +161,32 @@ async function processResults(settings: FeatureSettings): Promise<void> {
       }
 
       ReactDOM.render(
-        <StackedSearchResultsOverlay summary={summary} onClose={() => {
-          if (overlayRoot && overlayRoot.parentNode) {
-            overlayRoot.parentNode.removeChild(overlayRoot);
-          }
-        }} />,
+        settings.useSunburstVisualization ? (
+          <SunburstSearchResultsOverlay 
+            summary={summary} 
+            onClose={() => {
+              if (overlayRoot && overlayRoot.parentNode) {
+                overlayRoot.parentNode.removeChild(overlayRoot);
+              }
+            }} 
+          />
+        ) : (
+          <StackedSearchResultsOverlay 
+            summary={summary} 
+            onClose={() => {
+              if (overlayRoot && overlayRoot.parentNode) {
+                overlayRoot.parentNode.removeChild(overlayRoot);
+              }
+            }} 
+          />
+        ),
         overlayRoot
       );
     } catch (error) {
       console.error('Error fetching summary:', error);
     }
   }
+
 
   // Only fetch and show metadata if enabled
   if (settings.showMetadata) {
