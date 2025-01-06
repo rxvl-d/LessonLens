@@ -3,14 +3,17 @@
         "tasks": [
                 {
                         "feature_flags": [],
+"task_type": "lookup",
                         "search_task": "Finde gebrauchsfertige Materialien, die den Übergang vom Satz des Pythagoras zum Kosinussatz erklären, einschließlich spezifischer Beispiele, die zeigen, wie der Kosinussatz den Satz des Pythagoras für nicht-rechtwinklige Dreiecke verallgemeinert."
                 },
                 {
                         "feature_flags": ["summary", "metadata"],
+"task_type": "lookup",
                         "search_task": "Finde Arbeitsblätter mit visuellen Beweisen des Satzes des Pythagoras, geeignet für Klasse 9/10, mit Fokus auf Beweise, die Flächenvergleiche und geometrische Transformationen nutzen, einschließlich historischem Kontext und schrittweisen Erklärungen."
                 },
                 {
                         "feature_flags": ["summary", "snippets"],
+"task_type": "exploratory",
                         "search_task": "Untersuche kreative Ansätze zur Einführung trigonometrischer Verhältnisse, die: <ul><li>Reale Beispiele aus Architektur oder Ingenieurwesen verwenden</li><li>Praktische Messaktivitäten einbeziehen</li><li>An das Vorwissen der Schüler über ähnliche Dreiecke anknüpfen</li><li>Innerhalb von 2-3 Unterrichtsstunden abgeschlossen werden können</li></ul>",
                         "relevance_dimensions": [
                                 "Welche mathematischen Konzepte werden erwähnt?",
@@ -19,14 +22,17 @@
                 },
                 {
                         "feature_flags": [],
+"task_type": "exploratory",
                         "search_task": "Recherchiere mathematische Aktivitäten im Freien, die: <ul><li>Ähnlichkeitssätze auf reale Messungen anwenden</li><li>Schatten und indirekte Messungen nutzen</li><li>Präzise Durchführungsanweisungen enthalten</li><li>Sicherheits- und praktische Einschränkungen berücksichtigen</li><li>Alternative Aktivitäten für drinnen bereitstellen</li></ul>"
                 },
                 {
                         "feature_flags": ["summary", "metadata"],
+"task_type": "lookup",
                         "search_task": "Finde Übungsaufgaben und durchgerechnete Beispiele, die die kombinierte Anwendung von Sinussatz und Kosinussatz in komplexen Dreiecken demonstrieren, geeignet für Schüler der Klassen 9/10 in der Prüfungsvorbereitung."
                 },
                 {
                         "feature_flags": ["summary", "snippets"],
+"task_type": "exploratory",
                         "search_task": "Erkunde Projektideen, die: <ul><li>Mehrere Konzepte aus der Einheit integrieren (Ähnlichkeit, Pythagoras, Trigonometrie)</li><li>In Gruppen über 2-3 Unterrichtsstunden bearbeitet werden können</li><li>Klare Bewertungskriterien enthalten</li><li>Kreative Präsentationsformate ermöglichen</li><li>Verbindungen zu realen Anwendungen herstellen</li><li>Verschiedene Leistungsniveaus unterstützen</li></ul>",
                         "relevance_dimensions": [
                                 "Welche mathematischen Konzepte werden behandelt?",

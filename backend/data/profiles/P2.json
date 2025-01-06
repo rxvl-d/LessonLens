@@ -2,10 +2,12 @@
 "tasks":[
   {
     "feature_flags": [],
+    "task_type": "lookup",
     "search_task": "Find age-appropriate examples of probability misconceptions and common student errors when first learning about chance, specifically focusing on materials suitable for 8th graders who haven't had formal probability instruction."
   },
   {
     "feature_flags": ["summary", "snippets"],
+    "task_type": "exploratory",
     "search_task": "Investigate different approaches to teaching the law of large numbers that: <ul> <li>Use digital tools or physical objects</li> <li>Help students visualize the convergence of relative frequencies</li> <li>Account for different student learning speeds</li> <li>Include opportunities for group work</li> <li>Can be completed within 2-3 class periods</li> </ul> ",
     "relevance_dimensions": [
       "What kinds of hands on pedagogical approaches does it offer?", 
@@ -14,14 +16,17 @@
   },
   {
     "feature_flags": ["summary", "metadata"],
+    "task_type": "lookup",
     "search_task": "Locate teaching materials that demonstrate the difference between theoretical and experimental probability using regular geometric solids (cubes, rectangular prisms, etc.) including specific mathematical explanations appropriate for 13-14 year olds."
   },
   {
     "feature_flags": [],
+    "task_type": "exploratory",
     "search_task": "Research engaging real-world contexts for teaching probability with asymmetric objects that: <ul> <li>Connect to student interests</li> <li>Allow for meaningful data collection</li> <li>Demonstrate why theoretical probability calculations don't always work</li> <li>Include opportunities for students to make and test predictions</li> <li>Support understanding of probability as a forecast</li> </ul> "
   },
   {
     "feature_flags": ["summary", "snippets"],
+    "task_type": "lookup",
     "search_task": "Find ready-to-use worksheets or digital materials showing how to introduce tree diagrams for two-stage probability experiments, including worked examples that progress from simple to complex scenarios.",
     "relevance_dimensions": [
       "Does it include worksheets?", 
@@ -30,6 +35,7 @@
   },
   {
     "feature_flags": ["summary", "metadata"],
+    "task_type": "exploratory",
     "search_task": "Explore assessment approaches that: <ul> <li>Combine theoretical and experimental probability</li> <li>Include both single and multi-stage experiments</li> <li>Allow students to demonstrate understanding in multiple ways</li> <li>Connect to real-world applications</li> <li>Are appropriate for different skill levels in the class</li> <li>Can show student growth across the unit's key concepts</li> </ul> "
   }
 ]}
